@@ -1,0 +1,10 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Synthetic session tokens of the contract fixtures and the test harness (the payload decodes to {\"fake\":\"true\"} or {\"stale\":true}); not credentials"
+regexTarget = "match"
+regexes = [
+  '''v1\.eyJmYWtlIjoidHJ1ZSJ9\.ZmFrZS1zaWduYXR1cmU''',
+  '''v1\.eyJzdGFsZSI6dHJ1ZX0\.c3RhbGUtc2lnbmF0dXJl''',
+]
