@@ -95,6 +95,23 @@ describe("usePdfJob", () => {
     expect(server.exchanges.at(-1)!.received.headers["authorization"]).toBe("Bearer " + SESSION_TOKEN);
   });
 
+  it("uploads through the global fetch, not the provider's fetch prop", async () => {
+    server.expect("upload-ticket-pdf", "upload-put-pdf", "pdf-job-prefer-wait-finished", "findings");
+    const seen: string[] = [];
+    const spy: typeof fetch = (input, init) => { seen.push(String(input)); return globalThis.fetch(input, init); };
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <KolderaProvider baseUrl={server.origin} fetch={spy} getSessionToken={async () => SESSION_TOKEN}>
+        {children}
+      </KolderaProvider>
+    );
+    const { result } = renderHook(() => usePdfJob(), { wrapper });
+    await act(async () => {
+      await result.current.createJob(PDF_BYTES, { mode: "fix", fileName: "sample.pdf", wait: 60 });
+    });
+    expect(seen.some((u) => u.includes("/content"))).toBe(false);
+    expect(seen.some((u) => u.endsWith("/v1/pdf/jobs"))).toBe(true);
+  });
+
   it("wait: a job finished within the server's wait is not polled", async () => {
     server.expect("upload-ticket-pdf", "upload-put-pdf", "pdf-job-prefer-wait-finished", "findings");
     const { result } = renderHook(() => usePdfJob(), { wrapper: Provider });

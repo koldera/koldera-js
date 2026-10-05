@@ -75,8 +75,10 @@ export interface KolderaProviderProps {
    */
   getSessionToken: () => Promise<SessionGrant | string>;
   children: ReactNode;
-  /** Test seam. */
+  /** Fetch for API calls (a test seam, or a wrapper that adds your own headers). Never used for signed storage URLs. */
   fetch?: typeof fetch;
+  /** Fetch for signed storage URLs; defaults to the global `fetch`. Must not add credentials. */
+  storageFetch?: typeof fetch;
 }
 
 interface ProviderValue {
@@ -88,7 +90,7 @@ interface ProviderValue {
 const Context = createContext<ProviderValue | null>(null);
 
 /** Wraps the browser SDK: one client, one lazily minted session, transparent refresh. */
-export function KolderaProvider({ baseUrl, getSessionToken, children, fetch: fetchImpl }: KolderaProviderProps) {
+export function KolderaProvider({ baseUrl, getSessionToken, children, fetch: fetchImpl, storageFetch }: KolderaProviderProps) {
   const cache = useRef<{ token: string; expiresAtMs: number | null } | null>(null);
   const inflight = useRef<Promise<string> | null>(null);
   const getToken = useRef(getSessionToken);
@@ -116,7 +118,7 @@ export function KolderaProvider({ baseUrl, getSessionToken, children, fetch: fet
       })();
       return inflight.current;
     };
-    const client = new KolderaBrowserClient({ baseUrl, sessionToken: currentToken, fetch: fetchImpl });
+    const client = new KolderaBrowserClient({ baseUrl, sessionToken: currentToken, fetch: fetchImpl, storageFetch });
     const run = async <T,>(call: (c: KolderaBrowserClient) => Promise<T>): Promise<T> => {
       try {
         return await call(client);
@@ -129,7 +131,7 @@ export function KolderaProvider({ baseUrl, getSessionToken, children, fetch: fet
       }
     };
     return { client, run };
-  }, [baseUrl, fetchImpl]);
+  }, [baseUrl, fetchImpl, storageFetch]);
 
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
