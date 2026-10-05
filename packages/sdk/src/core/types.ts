@@ -188,11 +188,41 @@ export interface ProblemError {
   message: string;
 }
 
+export type ProblemCode = Open<
+  | "ARTIFACT_EXPIRED"
+  | "CHECKSUM_MISMATCH"
+  | "FILE_IMAGE_NOT_ALLOWED"
+  | "FILE_TOO_LARGE"
+  | "FORBIDDEN"
+  | "HOST_NOT_ALLOWED"
+  | "IDEMPOTENCY_KEY_REUSED"
+  | "IMAGE_UPLOAD_INVALID"
+  | "INSUFFICIENT_SCOPE"
+  | "INVALID_JSON"
+  | "NOT_FOUND"
+  | "ORDER_FIX_UNSUPPORTED"
+  | "QUEUE_FULL"
+  | "SESSION_JOB_LIMIT"
+  | "SESSION_UPLOAD_LIMIT"
+  | "SIGNATURE_INVALID"
+  | "SIZE_MISMATCH"
+  | "STALE_READING_ORDER_SNAPSHOT"
+  | "UNAUTHORIZED"
+  | "UNSUPPORTED_INPUT"
+  | "UNSUPPORTED_MEDIA_TYPE"
+  | "UPLOAD_ALREADY_COMPLETED"
+  | "UPLOAD_CONFLICT"
+  | "UPLOAD_EXPIRED"
+  | "UPLOAD_INCOMPLETE"
+  | "UPLOAD_NOT_FOUND"
+  | "VALIDATION_ERROR"
+>;
+
 export interface Problem {
   type: string;
   title: string;
   status: number;
-  code: string;
+  code: ProblemCode;
   detail?: string;
   errors?: ProblemError[];
 }
