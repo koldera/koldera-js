@@ -1,0 +1,29 @@
+{
+  "name": "client-session-invalid",
+  "operationId": "createClientSession",
+  "auth": "server",
+  "request": {
+    "method": "POST",
+    "path": "/v1/client-sessions",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "allowedOrigin": "https://app.example.com/path"
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "body": {
+      "type": "about:blank",
+      "title": "Invalid client session request",
+      "status": 422,
+      "code": "VALIDATION_ERROR",
+      "detail": "allowedOrigin must be an absolute http(s) origin without a path, e.g. https://app.example"
+    }
+  }
+}

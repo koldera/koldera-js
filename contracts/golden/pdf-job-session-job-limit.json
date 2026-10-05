@@ -1,0 +1,33 @@
+{
+  "name": "pdf-job-session-job-limit",
+  "operationId": "createPdfJob",
+  "auth": "session",
+  "request": {
+    "method": "POST",
+    "path": "/v1/pdf/jobs",
+    "headers": {
+      "Authorization": "Bearer {{sessionToken}}",
+      "Content-Type": "application/json",
+      "Idempotency-Key": "{{idempotencyKey}}"
+    },
+    "body": {
+      "uploadId": "11111111-1111-4111-8111-111111111111",
+      "mode": "fix",
+      "profile": "ua1"
+    }
+  },
+  "response": {
+    "status": 429,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "body": {
+      "type": "about:blank",
+      "title": "Session job limit reached",
+      "status": 429,
+      "code": "SESSION_JOB_LIMIT",
+      "detail": "This client session has used its job budget; mint a new session."
+    }
+  },
+  "notes": "koldera-core sends NO Retry-After on this 429: a session budget does not recover. SDKs must not retry it and must tolerate the missing header."
+}

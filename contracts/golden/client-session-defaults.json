@@ -1,0 +1,27 @@
+{
+  "name": "client-session-defaults",
+  "operationId": "createClientSession",
+  "auth": "server",
+  "request": {
+    "method": "POST",
+    "path": "/v1/client-sessions",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "allowedOrigin": "https://app.example.com"
+    }
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "sessionToken": "v1.eyJmYWtlIjoidHJ1ZSJ9.ZmFrZS1zaWduYXR1cmU",
+      "expiresAt": "2026-10-05T10:15:00Z",
+      "publishableKey": null
+    }
+  }
+}

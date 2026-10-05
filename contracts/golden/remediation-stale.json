@@ -1,0 +1,37 @@
+{
+  "name": "remediation-stale",
+  "operationId": "createReadingOrderRemediation",
+  "auth": "server",
+  "request": {
+    "method": "POST",
+    "path": "/v1/jobs/4d2d5a6e-2b1c-4e4a-9d6b-1f3c5e7a9b01/reading-order/remediations",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}",
+      "Content-Type": "application/json",
+      "Idempotency-Key": "{{idempotencyKey}}"
+    },
+    "body": {
+      "baseArtifactSha256": "fe9a7d44f4318fec2635607dcacc6755fafe3b997406abe640db9cec5f28ab08",
+      "snapshotVersion": 1,
+      "target": "pdf_tags",
+      "orderedNodeIds": [
+        "n2b3c4d5e6f708190",
+        "n1a2b3c4d5e6f7089"
+      ],
+      "acknowledged": true
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "body": {
+      "type": "about:blank",
+      "title": "Stale reading-order snapshot",
+      "status": 409,
+      "code": "STALE_READING_ORDER_SNAPSHOT",
+      "detail": "baseArtifactSha256/snapshotVersion do not match the job's current snapshot; reload the reading order and review again."
+    }
+  }
+}

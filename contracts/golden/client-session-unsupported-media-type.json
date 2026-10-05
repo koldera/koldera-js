@@ -1,0 +1,30 @@
+{
+  "name": "client-session-unsupported-media-type",
+  "operationId": "createClientSession",
+  "auth": "server",
+  "request": {
+    "method": "POST",
+    "path": "/v1/client-sessions",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "allowedOrigin": "https://app.example.com"
+    }
+  },
+  "response": {
+    "status": 415,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "body": {
+      "type": "about:blank",
+      "title": "Unsupported media type",
+      "status": 415,
+      "code": "UNSUPPORTED_MEDIA_TYPE",
+      "detail": "Send the body as application/json."
+    }
+  },
+  "notes": "A well-behaved SDK never triggers this; the mock answers it so error mapping to the 415 class can be tested."
+}

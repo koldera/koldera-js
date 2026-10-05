@@ -1,0 +1,32 @@
+{
+  "name": "pdf-job-insufficient-scope",
+  "operationId": "createPdfJob",
+  "auth": "session",
+  "request": {
+    "method": "POST",
+    "path": "/v1/pdf/jobs",
+    "headers": {
+      "Authorization": "Bearer {{sessionToken}}",
+      "Content-Type": "application/json",
+      "Idempotency-Key": "{{idempotencyKey}}"
+    },
+    "body": {
+      "uploadId": "11111111-1111-4111-8111-111111111111",
+      "mode": "fix",
+      "profile": "ua1"
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "body": {
+      "type": "about:blank",
+      "title": "Insufficient scope",
+      "status": 403,
+      "code": "INSUFFICIENT_SCOPE",
+      "detail": "This session token lacks the jobs:create scope."
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "upload-ticket-image-png",
+  "operationId": "createUpload",
+  "auth": "server",
+  "request": {
+    "method": "POST",
+    "path": "/v1/uploads",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}",
+      "Content-Type": "application/json",
+      "Idempotency-Key": "{{idempotencyKey}}"
+    },
+    "body": {
+      "fileName": "logo.png",
+      "sizeBytes": 16,
+      "sha256": "02a3e298f1533f62558c58e4c70edcab9af5a50d62d925fd5390942020fb0fb8",
+      "contentType": "image/png"
+    }
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "uploadId": "33333333-3333-4333-8333-333333333333",
+      "method": "PUT",
+      "uploadUrl": "{{baseUrl}}/v1/uploads/33333333-3333-4333-8333-333333333333/content?exp=1790000000&sig=ZmFrZS1zaWduYXR1cmUtZm9yLXRlc3Rz",
+      "expiresAt": "2026-10-05T10:10:00Z",
+      "maxBytes": null
+    }
+  },
+  "notes": "Images have no configured size limit: maxBytes is null."
+}

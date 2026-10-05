@@ -1,0 +1,31 @@
+{
+  "name": "web-job-host-not-allowed",
+  "operationId": "createWebJob",
+  "auth": "server",
+  "request": {
+    "method": "POST",
+    "path": "/v1/web/jobs",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}",
+      "Content-Type": "application/json",
+      "Idempotency-Key": "{{idempotencyKey}}"
+    },
+    "body": {
+      "url": "https://example.com/page"
+    }
+  },
+  "response": {
+    "status": 421,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "body": {
+      "type": "about:blank",
+      "title": "Host not allowed",
+      "status": 421,
+      "code": "HOST_NOT_ALLOWED",
+      "detail": "With KOLDERA_AUTH=none only the host names in KOLDERA_ALLOWED_HOSTS are answered."
+    }
+  },
+  "notes": "421 comes from a core running with KOLDERA_AUTH=none and a Host header outside KOLDERA_ALLOWED_HOSTS."
+}

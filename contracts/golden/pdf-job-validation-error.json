@@ -1,0 +1,33 @@
+{
+  "name": "pdf-job-validation-error",
+  "operationId": "createPdfJob",
+  "auth": "server",
+  "request": {
+    "method": "POST",
+    "path": "/v1/pdf/jobs",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}",
+      "Content-Type": "application/json",
+      "Idempotency-Key": "{{idempotencyKey}}"
+    },
+    "body": {
+      "uploadId": "11111111-1111-4111-8111-111111111111",
+      "mode": "analyze",
+      "profile": "ua1",
+      "explicitTitle": "x"
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "body": {
+      "type": "about:blank",
+      "title": "Invalid job request",
+      "status": 422,
+      "code": "VALIDATION_ERROR",
+      "detail": "The upload is not complete."
+    }
+  }
+}

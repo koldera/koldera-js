@@ -1,0 +1,76 @@
+{
+  "name": "document-job-image-upload-invalid",
+  "operationId": "createDocumentJob",
+  "auth": "server",
+  "request": {
+    "method": "POST",
+    "path": "/v1/documents/jobs",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}",
+      "Content-Type": "application/json",
+      "Idempotency-Key": "{{idempotencyKey}}"
+    },
+    "body": {
+      "title": "Invoice 2026-0042",
+      "language": "en",
+      "body": [
+        {
+          "type": "heading",
+          "level": 1,
+          "text": "Invoice 2026-0042"
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            "Thank you ",
+            {
+              "strong": "very much"
+            },
+            "."
+          ]
+        },
+        {
+          "type": "table",
+          "caption": "Items billed",
+          "header": [
+            [
+              "Description",
+              "Amount"
+            ]
+          ],
+          "rows": [
+            [
+              "Consulting",
+              "1000.00"
+            ]
+          ]
+        },
+        {
+          "type": "image",
+          "uploadId": "33333333-3333-4333-8333-333333333333",
+          "alt": "Company logo: a blue square"
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "body": {
+      "type": "about:blank",
+      "title": "Invalid document",
+      "status": 422,
+      "code": "VALIDATION_ERROR",
+      "detail": "The image upload is not complete or is not an image.",
+      "errors": [
+        {
+          "path": "/body/3/uploadId",
+          "code": "IMAGE_UPLOAD_INVALID",
+          "message": "The upload is missing, incomplete or not a PNG, JPEG or SVG image."
+        }
+      ]
+    }
+  }
+}

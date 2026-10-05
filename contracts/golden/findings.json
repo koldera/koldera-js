@@ -1,0 +1,40 @@
+{
+  "name": "findings",
+  "operationId": "listFindings",
+  "auth": "server",
+  "request": {
+    "method": "GET",
+    "path": "/v1/jobs/4d2d5a6e-2b1c-4e4a-9d6b-1f3c5e7a9b01/findings",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "items": [
+        {
+          "source": "pdf",
+          "ruleId": "7.1-3",
+          "message": "Content is neither marked as Artifact nor tagged as real content.",
+          "pageNumber": 1,
+          "selector": null,
+          "needsHumanReview": false,
+          "resolution": "fixed_in_copy"
+        },
+        {
+          "source": "pdf",
+          "ruleId": "TITLE_FROM_FILE_NAME",
+          "message": "The title was taken from the file name; check it.",
+          "pageNumber": null,
+          "selector": null,
+          "needsHumanReview": true,
+          "resolution": null
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "artifact-download-remediated",
+  "operationId": "downloadArtifact",
+  "auth": "server",
+  "request": {
+    "method": "GET",
+    "path": "/v1/artifacts/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2/content?exp=1790000000&sig=ZmFrZS1zaWduYXR1cmUtZm9yLXRlc3Rz",
+    "headers": {},
+    "forbiddenHeaders": [
+      "Authorization"
+    ]
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/pdf",
+      "Content-Length": "45",
+      "Content-Disposition": "attachment; filename=\"remediated.pdf\"",
+      "X-Content-Type-Options": "nosniff"
+    },
+    "rawBody": "%PDF-1.7\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n",
+    "sha256": "fe9a7d44f4318fec2635607dcacc6755fafe3b997406abe640db9cec5f28ab08"
+  }
+}

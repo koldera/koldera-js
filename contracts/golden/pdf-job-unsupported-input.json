@@ -1,0 +1,32 @@
+{
+  "name": "pdf-job-unsupported-input",
+  "operationId": "createPdfJob",
+  "auth": "server",
+  "request": {
+    "method": "POST",
+    "path": "/v1/pdf/jobs",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}",
+      "Content-Type": "application/json",
+      "Idempotency-Key": "{{idempotencyKey}}"
+    },
+    "body": {
+      "uploadId": "11111111-1111-4111-8111-111111111111",
+      "mode": "fix",
+      "profile": "ua1"
+    }
+  },
+  "response": {
+    "status": 415,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "body": {
+      "type": "about:blank",
+      "title": "Unsupported input",
+      "status": 415,
+      "code": "UNSUPPORTED_INPUT",
+      "detail": "The upload is not a PDF."
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "info",
+  "operationId": "getInfo",
+  "auth": "server",
+  "request": {
+    "method": "GET",
+    "path": "/v1/info",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "version": "0.1.0",
+      "engineVersion": "0.1.0",
+      "features": [
+        "document",
+        "html",
+        "pdf",
+        "web"
+      ]
+    }
+  }
+}

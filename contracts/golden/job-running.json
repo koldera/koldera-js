@@ -1,0 +1,37 @@
+{
+  "name": "job-running",
+  "operationId": "getJob",
+  "auth": "server",
+  "request": {
+    "method": "GET",
+    "path": "/v1/jobs/4d2d5a6e-2b1c-4e4a-9d6b-1f3c5e7a9b01",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json",
+      "Retry-After": "2"
+    },
+    "body": {
+      "id": "4d2d5a6e-2b1c-4e4a-9d6b-1f3c5e7a9b01",
+      "kind": "pdf",
+      "mode": "analyze",
+      "state": "running",
+      "createdAt": "2026-10-05T10:00:00Z",
+      "startedAt": "2026-10-05T10:00:01Z",
+      "finishedAt": null,
+      "validation": null,
+      "baselineValidation": null,
+      "finalValidation": null,
+      "remediationStatus": null,
+      "manualReviewRequired": true,
+      "engineVersion": null,
+      "error": null,
+      "targetUrl": null,
+      "contentSelector": null
+    }
+  }
+}

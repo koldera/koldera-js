@@ -1,0 +1,51 @@
+{
+  "name": "remediation-accepted",
+  "operationId": "createReadingOrderRemediation",
+  "auth": "server",
+  "request": {
+    "method": "POST",
+    "path": "/v1/jobs/4d2d5a6e-2b1c-4e4a-9d6b-1f3c5e7a9b01/reading-order/remediations",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}",
+      "Content-Type": "application/json",
+      "Idempotency-Key": "{{idempotencyKey}}"
+    },
+    "body": {
+      "baseArtifactSha256": "fe9a7d44f4318fec2635607dcacc6755fafe3b997406abe640db9cec5f28ab08",
+      "snapshotVersion": 1,
+      "target": "pdf_tags",
+      "orderedNodeIds": [
+        "n2b3c4d5e6f708190",
+        "n1a2b3c4d5e6f7089"
+      ],
+      "acknowledged": true,
+      "reviewer": "reviewer@example.com"
+    }
+  },
+  "response": {
+    "status": 202,
+    "headers": {
+      "Content-Type": "application/json",
+      "Location": "/v1/jobs/4d2d5a6e-2b1c-4e4a-9d6b-1f3c5e7a9b02"
+    },
+    "body": {
+      "id": "4d2d5a6e-2b1c-4e4a-9d6b-1f3c5e7a9b02",
+      "kind": "order_pdf",
+      "mode": "reorder",
+      "state": "queued",
+      "createdAt": "2026-10-05T10:00:00Z",
+      "startedAt": null,
+      "finishedAt": null,
+      "validation": null,
+      "baselineValidation": null,
+      "finalValidation": null,
+      "remediationStatus": null,
+      "manualReviewRequired": true,
+      "engineVersion": null,
+      "error": null,
+      "targetUrl": null,
+      "contentSelector": null
+    }
+  },
+  "notes": "reviewer is an audit label asserted by the caller, not authenticated. acknowledged must be true."
+}

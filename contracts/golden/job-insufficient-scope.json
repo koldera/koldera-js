@@ -1,0 +1,25 @@
+{
+  "name": "job-insufficient-scope",
+  "operationId": "getJob",
+  "auth": "session",
+  "request": {
+    "method": "GET",
+    "path": "/v1/jobs/4d2d5a6e-2b1c-4e4a-9d6b-1f3c5e7a9b01",
+    "headers": {
+      "Authorization": "Bearer {{sessionToken}}"
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "body": {
+      "type": "about:blank",
+      "title": "Insufficient scope",
+      "status": 403,
+      "code": "INSUFFICIENT_SCOPE",
+      "detail": "This session token lacks the jobs:read scope."
+    }
+  }
+}

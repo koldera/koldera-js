@@ -1,0 +1,26 @@
+{
+  "name": "info-session",
+  "operationId": "getInfo",
+  "auth": "session",
+  "request": {
+    "method": "GET",
+    "path": "/v1/info",
+    "headers": {
+      "Authorization": "Bearer {{sessionToken}}"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "version": null,
+      "engineVersion": null,
+      "features": [
+        "pdf"
+      ]
+    }
+  },
+  "notes": "Open to every client session whatever its scopes; version fields may be null."
+}
