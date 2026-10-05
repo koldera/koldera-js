@@ -12,9 +12,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # The full CI workflow for the tagged commit: nothing is published unless every job passes.
+  # The full compatibility matrix for the tagged commit: nothing is published unless every job passes.
   ci:
-    uses: ./.github/workflows/ci.yml
+    uses: ./.github/workflows/matrix.yml
     permissions:
       contents: read
 
