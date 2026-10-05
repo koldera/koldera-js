@@ -154,9 +154,10 @@ publishing needs npm 11.5.1 or later and Node 22.14 or later) and fails if the v
    ```
 
 5. `release.yml` verifies that the tag matches both package versions and sits on `main`, runs the whole CI workflow
-   for that commit, deploys the TypeDoc site to GitHub Pages, then publishes both packages with provenance (after your
-   approval if you added reviewers) and finally creates the GitHub Release with generated notes. Publishing is the last
-   step that can fail the release; Pages and the checks come before it.
+   and the compatibility matrix for that commit, then publishes both packages with provenance (after your approval if
+   you added reviewers). After that the GitHub Release (generated notes) and the TypeDoc site on GitHub Pages are made
+   in parallel; a Pages failure does not block the release. Publishing is the last step that can fail the release
+   before it reaches npm; the checks come before it.
 
 If a publish fails halfway (for example only one package went out), fix the cause and re-run the failed jobs: the publish
 step skips a version that is already on npm and publishes the rest. Never reuse a version number for different content;
