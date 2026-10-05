@@ -1,0 +1,63 @@
+{
+  "name": "@koldera/sdk",
+  "version": "0.1.0",
+  "description": "JavaScript and TypeScript SDK for koldera-core: PDF/UA checks and fixes, HTML and structured documents to tagged PDF, web scans. Node and browsers.",
+  "license": "Apache-2.0",
+  "author": "Roman Lakusta",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/koldera/koldera-js.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://github.com/koldera/koldera-js#readme",
+  "bugs": {
+    "url": "https://github.com/koldera/koldera-js/issues"
+  },
+  "keywords": ["accessibility", "pdf", "pdf-ua", "wcag", "koldera", "sdk"],
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node/index.d.ts",
+      "node": "./dist/node/index.js",
+      "default": "./dist/node/index.js"
+    },
+    "./browser": {
+      "types": "./dist/browser/index.d.ts",
+      "browser": "./dist/browser/index.js",
+      "default": "./dist/browser/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.map",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "pnpm build && vitest run",
+    "lint": "tsc -p tsconfig.json --noEmit && tsc -p tests/tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.3",
+    "esbuild": "0.28.2",
+    "typescript": "5.9.3",
+    "vitest": "5.0.1"
+  }
+}
