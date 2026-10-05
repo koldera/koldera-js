@@ -9,8 +9,12 @@ export interface TransportOptions {
   /** Returns the bearer for the next request (a server token, or a session token that may rotate). */
   bearer: () => string | Promise<string>;
   fetch?: FetchLike;
+  /** Fetch for signed storage URLs. Defaults to the global `fetch`, never to `fetch`. Must not add credentials. */
+  storageFetch?: FetchLike;
   /** Per-request timeout in milliseconds (default 30 000). */
   timeoutMs?: number;
+  /** Timeout of a whole storage upload or download, body included (default 600 000). */
+  storageTimeoutMs?: number;
   /** Product token appended to the SDK's User-Agent (Node only; browsers forbid the header). */
   userAgentSuffix?: string;
   sendUserAgent?: boolean;
@@ -47,13 +51,17 @@ const IDEMPOTENCY = /^[\x20-\x7e]{1,255}$/;
 export class Transport {
   private readonly baseUrl: string;
   private readonly fetchImpl: FetchLike;
+  private readonly storageFetchImpl: FetchLike;
   private readonly timeoutMs: number;
+  private readonly storageTimeoutMs: number;
   private readonly userAgent: string | undefined;
 
   constructor(private readonly options: TransportOptions) {
     this.baseUrl = normalizeBaseUrl(options.baseUrl);
     this.fetchImpl = options.fetch ?? defaultFetch();
+    this.storageFetchImpl = options.storageFetch ?? defaultFetch();
     this.timeoutMs = options.timeoutMs ?? 30_000;
+    this.storageTimeoutMs = options.storageTimeoutMs ?? 600_000;
     this.userAgent = options.sendUserAgent === false ? undefined : `${SDK_NAME}/${SDK_VERSION}${options.userAgentSuffix ? " " + options.userAgentSuffix : ""}`;
   }
 
@@ -106,16 +114,56 @@ export class Transport {
     }
   }
 
-  /** Raw request without the bearer: signed uploads and downloads. */
-  async storage(method: "PUT" | "GET", url: string, init: { body?: BodyInit; contentType?: string; signal?: AbortSignal }): Promise<Response> {
+  /** PUT to a signed upload URL: SDK-owned fetch, no credentials, one timeout over the whole upload. */
+  async storageUpload(url: string, body: BodyInit, contentType: string, signal?: AbortSignal): Promise<void> {
+    await this.storageExchange("PUT", url, "upload", { body, contentType, signal }, async () => undefined);
+  }
+
+  /** GET a signed download URL; the body is read under the same timeout and stops once it exceeds `maxBytes`. */
+  async storageDownload(url: string, maxBytes: number, signal?: AbortSignal): Promise<Uint8Array> {
+    return this.storageExchange("GET", url, "download", { signal }, (response) => readBounded(response, maxBytes));
+  }
+
+  private async storageExchange<T>(
+    method: "PUT" | "GET",
+    url: string,
+    label: "upload" | "download",
+    init: { body?: BodyInit; contentType?: string; signal?: AbortSignal },
+    read: (response: Response) => Promise<T>,
+  ): Promise<T> {
     const headers: Record<string, string> = {};
     if (init.contentType) headers["Content-Type"] = init.contentType;
-    const response = await this.send(url, { method, headers, body: init.body ?? null, signal: init.signal }, this.timeoutMs);
-    if (!response.ok) {
-      const problem = await readProblem(response);
-      throw new StorageError(`storage answered HTTP ${response.status} (${problem.code}) to ${method}`, response.status, problem.code);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(new DOMException("request timed out", "TimeoutError")), this.storageTimeoutMs);
+    const onAbort = () => controller.abort(init.signal?.reason);
+    if (init.signal) {
+      if (init.signal.aborted) {
+        clearTimeout(timer);
+        throw init.signal.reason ?? new DOMException("aborted", "AbortError");
+      }
+      init.signal.addEventListener("abort", onAbort, { once: true });
     }
-    return response;
+    try {
+      let response: Response;
+      try {
+        response = await this.storageFetchImpl(url, { method, headers, body: init.body ?? null, signal: controller.signal, credentials: "omit", redirect: "error" });
+      } catch (error) {
+        throw storageFailure(error, controller.signal, label);
+      }
+      if (!response.ok) {
+        const problem = await readProblem(response);
+        throw new StorageError(`storage answered HTTP ${response.status} (${problem.code}) to ${method}`, response.status, problem.code);
+      }
+      try {
+        return await read(response);
+      } catch (error) {
+        if (error instanceof StorageError) throw error;
+        throw storageFailure(error, controller.signal, label);
+      }
+    } finally {
+      clearTimeout(timer);
+      init.signal?.removeEventListener("abort", onAbort);
+    }
   }
 
   private async send(url: string, init: RequestInit & { signal?: AbortSignal }, timeoutMs: number): Promise<Response> {
@@ -138,6 +186,42 @@ export class Transport {
   }
 }
 
+/** Timeouts and caller aborts keep their own error; anything else becomes a StorageError that never carries the signed URL. */
+function storageFailure(error: unknown, signal: AbortSignal, label: string): unknown {
+  if (signal.aborted) return signal.reason ?? error;
+  return new StorageError(`${label} failed`);
+}
+
+async function readBounded(response: Response, maxBytes: number): Promise<Uint8Array> {
+  const tooLarge = () => new StorageError(`download exceeded the expected ${maxBytes} bytes`);
+  const declared = Number(response.headers.get("Content-Length"));
+  if (Number.isFinite(declared) && declared > maxBytes) {
+    await response.body?.cancel().catch(() => undefined);
+    throw tooLarge();
+  }
+  if (!response.body) return new Uint8Array(await response.arrayBuffer());
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => undefined);
+      throw tooLarge();
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return bytes;
+}
+
 /** A failed connection or our own timeout; not an abort by the caller and not an HTTP answer. */
 function isTransportFailure(error: unknown): boolean {
   return error instanceof TypeError || (error instanceof DOMException && error.name === "TimeoutError");
@@ -156,9 +240,9 @@ async function readProblem(response: Response): Promise<Problem> {
   const fallback: Problem = { type: "about:blank", title: response.statusText || "HTTP error", status: response.status, code: response.status >= 500 ? "INTERNAL_ERROR" : "UNKNOWN" };
   try {
     const body = (await response.json()) as Partial<Problem>;
-    if (typeof body.code === "string" && typeof body.status === "number") {
+    if (typeof body.code === "string") {
       const errors = Array.isArray(body.errors) ? body.errors.filter(isProblemError) : undefined;
-      return { type: body.type ?? fallback.type, title: body.title ?? fallback.title, status: body.status, code: body.code, detail: body.detail, errors };
+      return { type: body.type ?? fallback.type, title: body.title ?? fallback.title, status: response.status, code: body.code, detail: body.detail, errors };
     }
   } catch {
     // non-JSON body: use the fallback
