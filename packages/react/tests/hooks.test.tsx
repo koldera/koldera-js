@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { ConfigurationError, KolderaProvider, RateLimitError, useDocumentJob, useHtmlToPdfJob, usePdfJob, useReadingOrder, useWebScan, type SessionGrant, type StructuredDocument } from "../dist/index.js";
+import { ConfigurationError, KolderaProvider, RateLimitError, useDocumentJob, useHtmlToPdfJob, usePdfJob, useReadingOrder, useWebScan, type SessionGrant, type StructuredDocument, type PdfMode, type HtmlToPdfMode, type ImageContentType, type ProblemError, type ProblemCode, type ResponseMeta, type Block, type Inline } from "../dist/index.js";
 import { fixtures, GoldenServer, HTML_BYTES, PDF_BYTES, PNG_BYTES, SESSION_TOKEN, STALE_SESSION_TOKEN, type Fixture } from "../../sdk/tests/support/golden.js";
 
 const JOB_ID = "4d2d5a6e-2b1c-4e4a-9d6b-1f3c5e7a9b01";
@@ -229,6 +229,15 @@ describe("useReadingOrder", () => {
       created = await result.current.remediate({ ...body, acknowledged: true }, { wait: 60 });
     });
     expect((created as { state: string }).state).toBe("completed");
+  });
+});
+
+describe("re-exports", () => {
+  it("exposes the SDK types and errors a React app needs", async () => {
+    const types: [PdfMode, HtmlToPdfMode, ImageContentType, ProblemError, ResponseMeta, Block, Inline, ProblemCode?] = ["fix", "generate_fix", "image/png", { path: "", code: "SCHEMA", message: "m" }, { status: 200, location: undefined, preferenceApplied: undefined, idempotentReplayed: false }, { type: "pageBreak" }, "text"];
+    expect(types).toHaveLength(7);
+    const sdk = await import("../dist/index.js");
+    expect(sdk.UnsupportedMediaTypeError).toBeDefined();
   });
 });
 

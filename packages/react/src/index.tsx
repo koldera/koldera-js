@@ -20,14 +20,27 @@ import {
 
 export type {
   Artifact,
+  Block,
+  FooterBlock,
   Finding,
+  HtmlToPdfMode,
+  ImageBlock,
+  ImageContentType,
+  Inline,
   Job,
   JobState,
+  ListBody,
+  ListItem,
   MachineValidation,
+  PdfMode,
+  ProblemCode,
+  ProblemError,
   ReadingOrderNode,
   ReadingOrderRemediation,
   ReadingOrderSnapshot,
+  ResponseMeta,
   StructuredDocument,
+  TableBlock,
 } from "@koldera/sdk/browser";
 export {
   ApiError,

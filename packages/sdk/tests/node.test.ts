@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, vi, afterEach, beforeAll, describe, expect, it } from "vitest";
 import {
   ApiError,
   AuthenticationError,
@@ -16,6 +16,7 @@ import {
   UnsupportedMediaTypeError,
   ValidationError,
   type Artifact,
+  type ProblemCode,
   type ResponseMeta,
   type StructuredDocument,
 } from "../dist/node/index.js";
@@ -629,7 +630,7 @@ describe("retries", () => {
     expect(keys[2]).toBe(key);
     expect(keys[0]!.length).toBeLessThanOrEqual(255);
     expect(keys[0]).not.toBe(key);
-    for (const bad of ["", "k".repeat(256), "has space", "tab\t", "é"]) {
+    for (const bad of ["", "k".repeat(256), "tab\t", "é"]) {
       await expect(client.web.createScan({ url: "https://example.com/page", idempotencyKey: bad })).rejects.toThrow(/idempotencyKey/);
     }
   });
@@ -647,5 +648,74 @@ describe("cancellation and timeouts", () => {
   it("throws TimeoutError when the budget cannot cover the next poll", async () => {
     server.expect("job-queued-retry-after");
     await expect(client.jobs.wait(JOB_ID, { timeoutMs: 500 })).rejects.toThrow(TimeoutError);
+  });
+});
+
+describe("fix round 1", () => {
+  const key = "caller-retry-key";
+  it("a caller retry with the same key survives a replayed upload ticket (409 on the PUT is success)", async () => {
+    const ticket = fixtures["upload-ticket-pdf"]!;
+    fixtures["local-ticket-replayed"] = { ...ticket, name: "local-ticket-replayed", response: { ...ticket.response, headers: { ...ticket.response.headers, "Idempotent-Replayed": "true" } } };
+    server.expect("upload-ticket-pdf", "upload-put-pdf", "pdf-job-queue-full");
+    const first = await client.pdf.createJob({ file: PDF_BYTES, fileName: "sample.pdf", mode: "fix", idempotencyKey: key }).catch((e: unknown) => e);
+    expect(first).toBeInstanceOf(ServiceUnavailableError);
+    server.expect("local-ticket-replayed", "upload-put-already-completed", "pdf-job-idempotent-replay");
+    const second = await client.pdf.createJob({ file: PDF_BYTES, fileName: "sample.pdf", mode: "fix", idempotencyKey: key });
+    expect(second.state).toBe("queued");
+  });
+
+  it("a 409 on the PUT without a replayed ticket is still an error", async () => {
+    server.expect("upload-ticket-pdf", "upload-put-already-completed");
+    const e = await client.uploads.upload(PDF_BYTES, "application/pdf", "sample.pdf").catch((x: unknown) => x);
+    expect(e).toBeInstanceOf(StorageError);
+    expect((e as StorageError).code).toBe("UPLOAD_ALREADY_COMPLETED");
+  });
+
+  it("sends the trimmed reviewer and counts its length after trimming", async () => {
+    const bodies: string[] = [];
+    const spy = new KolderaClient({ token: SECRET_KEY, baseUrl: server.origin, fetch: async (_u, init) => { bodies.push(String(init.body)); return json(job({ kind: "order_pdf" }), 202); } });
+    const base = { baseArtifactSha256: "a".repeat(64), snapshotVersion: 1, target: "pdf_tags" as const, orderedNodeIds: ["n1", "n2"], acknowledged: true as const };
+    await spy.jobs.remediateReadingOrder(JOB_ID, { ...base, reviewer: " " + "r".repeat(200) + " " });
+    expect(JSON.parse(bodies[0]!).reviewer).toBe("r".repeat(200));
+    await expect(spy.jobs.remediateReadingOrder(JOB_ID, { ...base, reviewer: "r".repeat(201) })).rejects.toThrow(/reviewer/);
+    await expect(spy.jobs.remediateReadingOrder(JOB_ID, { ...base, reviewer: "   " })).rejects.toThrow(/reviewer/);
+  });
+
+  it("idempotency keys follow the server: printable ASCII with interior spaces, not blank", async () => {
+    server.expect("web-job-accepted");
+    await client.web.createScan({ url: "https://example.com/page", idempotencyKey: "two words-1" });
+    expect(server.exchanges.at(-1)!.received.headers["idempotency-key"]).toBe("two words-1");
+    for (const bad of ["", "   ", "k".repeat(256), "tab	", "é"]) {
+      await expect(client.web.createScan({ url: "https://example.com/page", idempotencyKey: bad })).rejects.toThrow(/idempotencyKey/);
+    }
+  });
+
+  it("does not repeat a POST with wait after a request timeout, but still repeats a network failure", async () => {
+    let calls = 0;
+    const timing = new KolderaClient({ token: SECRET_KEY, baseUrl: server.origin, fetch: async () => { calls += 1; throw new DOMException("t", "TimeoutError"); } });
+    await expect(timing.web.createScan({ url: "https://example.com/page", wait: 5 })).rejects.toMatchObject({ name: "TimeoutError" });
+    expect(calls).toBe(1);
+    calls = 0;
+    await expect(timing.web.createScan({ url: "https://example.com/page" })).rejects.toMatchObject({ name: "TimeoutError" });
+    expect(calls).toBe(3);
+    calls = 0;
+    const down = new KolderaClient({ token: SECRET_KEY, baseUrl: server.origin, fetch: async () => { calls += 1; throw new TypeError("fetch failed"); } });
+    await expect(down.web.createScan({ url: "https://example.com/page", wait: 5 })).rejects.toThrow("fetch failed");
+    expect(calls).toBe(3);
+  });
+
+  it("a runtime without process gets ConfigurationError, not ReferenceError", () => {
+    vi.stubGlobal("process", undefined);
+    try {
+      expect(() => new KolderaClient({ baseUrl: "http://x.invalid" })).toThrow(ConfigurationError);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("problem codes are typed but open", () => {
+    const known: ProblemCode = "QUEUE_FULL";
+    const future: ProblemCode = "SOMETHING_NEW";
+    expect([known, future]).toHaveLength(2);
   });
 });

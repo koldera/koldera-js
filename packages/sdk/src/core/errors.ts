@@ -1,4 +1,4 @@
-import type { Problem, ProblemError } from "./types.js";
+import type { Problem, ProblemCode, ProblemError } from "./types.js";
 
 /**
  * Every non-2xx answer becomes one of these. `code` is the stable problem code
@@ -7,7 +7,7 @@ import type { Problem, ProblemError } from "./types.js";
  */
 export class ApiError extends Error {
   readonly status: number;
-  readonly code: string;
+  readonly code: ProblemCode;
   readonly title: string;
   readonly detail: string | undefined;
   /** Per-problem entries of a rejected structured document (`path`, `code`, `message`); empty otherwise. */
@@ -97,9 +97,9 @@ export class TimeoutError extends Error {
 export class StorageError extends Error {
   readonly status: number | undefined;
   /** Problem code of the storage answer (`SIGNATURE_INVALID`, `UPLOAD_EXPIRED`, ...), when it sent one. */
-  readonly code: string | undefined;
+  readonly code: ProblemCode | undefined;
 
-  constructor(message: string, status?: number, code?: string) {
+  constructor(message: string, status?: number, code?: ProblemCode) {
     super(message);
     this.name = "StorageError";
     this.status = status;

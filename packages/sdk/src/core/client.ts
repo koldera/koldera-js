@@ -126,7 +126,13 @@ export class Uploads {
     if (typeof ticket.maxBytes === "number" && bytes.byteLength > ticket.maxBytes) {
       throw new ConfigurationError(`the file (${bytes.byteLength} bytes) exceeds the ticket limit of ${ticket.maxBytes} bytes`);
     }
-    await this.transport.storage("PUT", ticket.uploadUrl, { body: new Blob([bytes as BlobPart]), contentType, signal: options.signal });
+    try {
+      await this.transport.storage("PUT", ticket.uploadUrl, { body: new Blob([bytes as BlobPart]), contentType, signal: options.signal });
+    } catch (error) {
+      // A replayed ticket belongs to an earlier attempt whose PUT already stored these exact bytes (size and hash are part of the replayed request).
+      const stored = error instanceof StorageError && error.status === 409 && error.code === "UPLOAD_ALREADY_COMPLETED";
+      if (!(meta.idempotentReplayed && stored)) throw error;
+    }
     return ticket;
   }
 }
@@ -350,10 +356,11 @@ function validateTitle(title: string | null | undefined): string | undefined {
 
 function validateReviewer(reviewer: string | undefined): string | undefined {
   if (reviewer === undefined) return undefined;
-  if (typeof reviewer !== "string" || reviewer.trim().length === 0 || [...reviewer].length > 200 || /\p{Cc}/u.test(reviewer)) {
+  const trimmed = typeof reviewer === "string" ? reviewer.trim() : "";
+  if (trimmed.length === 0 || [...trimmed].length > 200 || /\p{Cc}/u.test(trimmed)) {
     throw new ConfigurationError("reviewer must be 1-200 printable characters");
   }
-  return reviewer;
+  return trimmed;
 }
 
 /** Drops undefined and null members so optional fields are absent on the wire. */

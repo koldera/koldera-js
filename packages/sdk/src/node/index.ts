@@ -29,11 +29,12 @@ export class KolderaClient extends CoreClient {
   readonly clientSessions: ClientSessions;
 
   constructor(options: KolderaClientOptions = {}) {
-    const token = options.token ?? process.env["KOLDERA_TOKEN"] ?? "";
+    const env = globalThis.process?.env ?? {};
+    const token = options.token ?? env["KOLDERA_TOKEN"] ?? "";
     if (typeof token !== "string" || token.trim().length === 0) {
       throw new ConfigurationError("token is required: pass options.token or set KOLDERA_TOKEN");
     }
-    const baseUrl = options.baseUrl ?? process.env["KOLDERA_URL"];
+    const baseUrl = options.baseUrl ?? env["KOLDERA_URL"];
     if (!baseUrl) {
       throw new ConfigurationError("baseUrl is required: pass options.baseUrl or set KOLDERA_URL");
     }

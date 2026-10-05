@@ -40,7 +40,7 @@ export const SDK_VERSION = "0.1.0";
 const MAX_BUSY_RETRIES = 2;
 const MAX_NETWORK_RETRIES = 2;
 const NETWORK_RETRY_DELAY_MS = 250;
-const IDEMPOTENCY = /^[\x21-\x7e]{1,255}$/;
+const IDEMPOTENCY = /^[\x20-\x7e]{1,255}$/;
 
 /** Bearer-authenticated JSON calls to koldera-core, shared by the Node and browser clients. */
 export class Transport {
@@ -57,15 +57,16 @@ export class Transport {
   }
 
   async call<T>(method: "GET" | "POST", path: string, options: CallOptions = {}): Promise<CallResult<T>> {
-    if (options.idempotencyKey !== undefined && !IDEMPOTENCY.test(options.idempotencyKey)) {
-      throw new ConfigurationError("idempotencyKey must be 1-255 printable ASCII characters without spaces");
+    const idempotencyKey = options.idempotencyKey?.trim();
+    if (options.idempotencyKey !== undefined && (!IDEMPOTENCY.test(options.idempotencyKey) || !idempotencyKey)) {
+      throw new ConfigurationError("idempotencyKey must be 1-255 printable ASCII characters and not blank");
     }
     if (options.wait !== undefined && !(Number.isInteger(options.wait) && options.wait >= 1 && options.wait <= 900)) {
       throw new ConfigurationError("wait must be a whole number of seconds from 1 to 900");
     }
     const timeoutMs = options.wait === undefined ? this.timeoutMs : Math.max(this.timeoutMs, (options.wait + 10) * 1000);
     // A repeated creation carries the same key, so the server replays its answer instead of creating a second job.
-    const safeToRepeat = method === "GET" || options.idempotencyKey !== undefined;
+    const safeToRepeat = method === "GET" || idempotencyKey !== undefined;
     let busy = 0;
     let network = 0;
     for (;;) {
@@ -73,13 +74,15 @@ export class Transport {
       if (!options.anonymous) headers["Authorization"] = `Bearer ${await this.options.bearer()}`;
       if (this.userAgent) headers["User-Agent"] = this.userAgent;
       if (options.body !== undefined) headers["Content-Type"] = "application/json";
-      if (options.idempotencyKey !== undefined) headers["Idempotency-Key"] = options.idempotencyKey;
+      if (idempotencyKey !== undefined) headers["Idempotency-Key"] = idempotencyKey;
       if (options.wait !== undefined) headers["Prefer"] = `wait=${options.wait}`;
       let response: Response;
       try {
         response = await this.send(this.baseUrl + path, { method, headers, body: options.body === undefined ? null : JSON.stringify(options.body), signal: options.signal }, timeoutMs);
       } catch (error) {
-        if (!options.signal?.aborted && safeToRepeat && network < MAX_NETWORK_RETRIES && isTransportFailure(error)) {
+        // A timeout of a held request (wait) would only hold again for as long; connection failures are repeated.
+        const heldTimeout = options.wait !== undefined && error instanceof DOMException && error.name === "TimeoutError";
+        if (!options.signal?.aborted && safeToRepeat && !heldTimeout && network < MAX_NETWORK_RETRIES && isTransportFailure(error)) {
           network += 1;
           await sleep(NETWORK_RETRY_DELAY_MS * network, options.signal);
           continue;

@@ -125,7 +125,7 @@ export class GoldenServer {
       if (actual === undefined) {
         this.mismatches.push(at + `missing header ${name}`);
       } else if (value === "{{idempotencyKey}}") {
-        if (!/^[\x21-\x7e]{1,255}$/.test(actual)) this.mismatches.push(at + `Idempotency-Key not 1-255 printable ASCII: ${actual}`);
+        if (!/^[\x20-\x7e]{1,255}$/.test(actual)) this.mismatches.push(at + `Idempotency-Key not 1-255 printable ASCII: ${actual}`);
       } else if (actual.split(";")[0]!.trim() !== this.resolve(value)) {
         this.mismatches.push(at + `header ${name}: ${actual} != ${this.resolve(value)}`);
       }
