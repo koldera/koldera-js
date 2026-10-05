@@ -89,7 +89,7 @@ jobs:
         run: pnpm --filter @koldera/react add --save-dev react@18 react-dom@18 @types/react@18 @types/react-dom@18
       - name: Show the React version under test
         run: node -p "'react ' + require('./packages/react/node_modules/react/package.json').version"
-      - run: pnpm --filter @koldera/sdk build
+      - run: pnpm -r build
       - run: pnpm --filter @koldera/react lint
       - run: pnpm --filter @koldera/react test
 

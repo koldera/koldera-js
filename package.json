@@ -12,7 +12,7 @@
     "lint": "pnpm -r lint",
     "test:docs": "pnpm -r build && vitest run",
     "test:scripts": "node --test scripts/*.test.mjs",
-    "docs:api": "typedoc",
+    "docs:api": "pnpm -r build && typedoc",
     "licences": "node scripts/check-licences.mjs",
     "hygiene": "node scripts/check-source-hygiene.mjs",
     "hygiene:test": "node --test scripts/check-source-hygiene.test.mjs"
