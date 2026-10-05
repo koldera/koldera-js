@@ -93,37 +93,70 @@ make the SDK claim. The repository is squash-merged.
 
 Releases are made by the maintainers. A release publishes both packages with the same version.
 
-One-time setup by the owner:
+### One-time setup by the owner
 
-1. Create the npm organisation `koldera` (https://www.npmjs.com/org/create) and make sure the publishing account is an
-   owner.
-2. Publish nothing by hand. For each package, `@koldera/sdk` and `@koldera/react`, open the package settings on npmjs.com
-   (for a scope that has no package yet, create the first version through "Trusted publisher" pending setup, or publish
-   a placeholder once with your own account), choose "Trusted Publisher", select GitHub Actions, and enter
-   organisation `koldera`, repository `koldera-js`, workflow `release.yml`. Leave the environment empty.
-3. In the GitHub repository settings, open Pages and set the source to "GitHub Actions".
-4. Optional: after publishing, restrict token publishing for each package ("Require two-factor authentication and
-   disallow tokens") so trusted publishing is the only route.
+npm only lets you configure a trusted publisher for a package that already exists (its documentation and `npm trust`
+both say so), so the very first publish of each package cannot use trusted publishing. Reserve the names with a
+placeholder, then switch to trusted publishing:
 
-No `NPM_TOKEN` secret is used. The workflow authenticates to npm with GitHub's OIDC token and needs npm 11.5.1 or later
-(the workflow installs it).
+1. Create the npm organisation `koldera` (https://www.npmjs.com/org/create). Use an account with two-factor
+   authentication enabled; it must be an owner of the organisation.
+2. For each package name (`sdk` and `react`) publish a placeholder by hand, once, from your own machine (this is the
+   only manual publish; it uses your interactive login and 2FA, no token is stored anywhere):
 
-To release:
+   ```bash
+   mkdir placeholder && cd placeholder
+   echo '{"name":"@koldera/sdk","version":"0.0.0","description":"Placeholder; the real package is published from github.com/koldera/koldera-js","license":"Apache-2.0"}' > package.json
+   npm login
+   npm publish --access public --tag placeholder
+   # repeat with "@koldera/react"
+   ```
 
-1. Make sure `main` is green. Set the same `version` in `packages/sdk/package.json` and `packages/react/package.json`,
-   and move the changelog entry from "Unreleased" to the version and date. The `@koldera/react` dependency on
-   `@koldera/sdk` is `workspace:^` and is rewritten to the real range on publish.
-2. Commit and merge that change through a pull request.
-3. Tag the merged commit and push the tag:
+3. Configure trusted publishing for each package (npm 11.10 or later, 2FA required), either on npmjs.com (package
+   Settings, Trusted Publisher, GitHub Actions) or with the CLI:
+
+   ```bash
+   npm trust github @koldera/sdk --repo koldera/koldera-js --file release.yml --env npm --allow-publish
+   npm trust github @koldera/react --repo koldera/koldera-js --file release.yml --env npm --allow-publish
+   ```
+
+   The values are: organisation `koldera`, repository `koldera-js`, workflow filename `release.yml`, environment
+   `npm`. They must match exactly or publishing fails with an authentication error.
+4. GitHub repository settings:
+   - Environments: `npm` (used by the publish job) and `github-pages` (used by the Pages job). Both already allow
+     deployments from tags matching `v*.*.*` only; if you recreate them, add that tag rule. On `npm` you can add
+     required reviewers so that every release needs your approval before it publishes.
+   - Pages: set the source to "GitHub Actions".
+   - Provenance and Pages from a private repository are not supported by npm and GitHub's free plan, so make the
+     repository public before the first release.
+5. Optional, after the first real release: on each package set "Require two-factor authentication and disallow
+   tokens", so trusted publishing is the only route.
+
+No `NPM_TOKEN` secret is used. The workflow authenticates with GitHub's OIDC token; it installs npm 11.21.0 (trusted
+publishing needs npm 11.5.1 or later and Node 22.14 or later) and fails if the version is too old.
+
+### Releasing a version
+
+1. Make sure `main` is green. Until koldera-core is public the CI contract job cannot read it and reports "skipped", so
+   run the check yourself first: compare `contracts/openapi.yaml`, `document.schema.json` and `problem.schema.json`
+   with koldera-core at the commit in `contracts/CORE_VERSION` (for example `git -C ../koldera-core show
+   <commit>:contracts/openapi.yaml | diff - contracts/openapi.yaml`).
+2. Set the same `version` in `packages/sdk/package.json` and `packages/react/package.json` (the SDK user agent is
+   generated from it at build time), and move the changelog entry from "Unreleased" to the version and date. The
+   `@koldera/react` dependency on `@koldera/sdk` is `workspace:^`; the workflow checks that the packed package
+   depends on exactly `^<version>`.
+3. Commit and merge that change through a pull request.
+4. Tag the merged commit and push the tag:
 
    ```bash
    git tag v0.1.0 <commit-on-main>
    git push origin v0.1.0
    ```
 
-4. `release.yml` verifies that the tag matches both package versions and sits on `main`, runs the whole CI workflow for
-   that commit, publishes both packages with provenance, creates the GitHub Release with generated notes and deploys the
-   TypeDoc site to GitHub Pages.
+5. `release.yml` verifies that the tag matches both package versions and sits on `main`, runs the whole CI workflow
+   for that commit, deploys the TypeDoc site to GitHub Pages, then publishes both packages with provenance (after your
+   approval if you added reviewers) and finally creates the GitHub Release with generated notes. Publishing is the last
+   step that can fail the release; Pages and the checks come before it.
 
 If a publish fails halfway (for example only one package went out), fix the cause and re-run the failed jobs: the publish
 step skips a version that is already on npm and publishes the rest. Never reuse a version number for different content;

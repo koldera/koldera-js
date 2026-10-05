@@ -50,9 +50,9 @@
     "provenance": true
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "node ../../scripts/write-sdk-version.mjs && tsc -p tsconfig.json",
     "test": "pnpm build && vitest run",
-    "lint": "tsc -p tsconfig.json --noEmit && tsc -p tests/tsconfig.json"
+    "lint": "node ../../scripts/write-sdk-version.mjs && tsc -p tsconfig.json --noEmit && tsc -p tests/tsconfig.json"
   },
   "devDependencies": {
     "@types/node": "22.20.3",

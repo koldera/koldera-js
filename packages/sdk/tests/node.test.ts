@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { afterAll, vi, afterEach, beforeAll, describe, expect, it } from "vitest";
 import {
   ApiError,

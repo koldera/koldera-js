@@ -1,3 +1,4 @@
+import { SDK_VERSION } from "./version.js";
 import { ConfigurationError, errorFromProblem, StorageError } from "./errors.js";
 import type { Problem, ProblemError, ResponseMeta } from "./types.js";
 
@@ -36,7 +37,7 @@ export interface CallResult<T> {
 }
 
 export const SDK_NAME = "koldera-sdk-js";
-export const SDK_VERSION = "0.1.0";
+export { SDK_VERSION };
 const MAX_BUSY_RETRIES = 2;
 const MAX_NETWORK_RETRIES = 2;
 const NETWORK_RETRY_DELAY_MS = 250;
