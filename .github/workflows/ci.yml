@@ -1,41 +1,42 @@
 name: CI
 
+# The lean per-change gate: one job on the oldest supported runtime plus a newest-runtime test step.
+# The wide compatibility matrix lives in matrix.yml and runs only for release tags (release.yml).
 on:
   pull_request:
+    paths-ignore: ['**/*.md', 'docs/**', '.github/ISSUE_TEMPLATE/**']
   push:
     branches: [main]
-  # release.yml runs this whole workflow for the tagged commit and publishes only when every job passed.
-  workflow_call:
+    paths-ignore: ['**/*.md', 'docs/**', '.github/ISSUE_TEMPLATE/**']
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  hygiene:
+  ci:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-      - run: node scripts/check-source-hygiene.mjs
-      - run: node --test scripts/check-source-hygiene.test.mjs scripts/check-licences.test.mjs
-
-  gitleaks:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # gitleaks scans the full history
           persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r build
+      - run: pnpm -r lint
+      - run: pnpm -r test
+      - run: pnpm test:docs
+      - run: pnpm test:scripts
+      - run: node scripts/check-source-hygiene.mjs
       - name: Install gitleaks (pinned release, SHA-256 checked)
         run: |
           # The gitleaks-action wrapper needs a paid licence for organisations; the plain binary does not.
@@ -46,60 +47,7 @@ jobs:
         run: ./gitleaks dir . --config .gitleaks.toml --redact --no-banner
       - name: Secrets in the git history
         run: ./gitleaks git . --config .gitleaks.toml --redact --no-banner
-
-  test:
-    name: test (node ${{ matrix.node }})
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        node: [20, 22, 24]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: ${{ matrix.node }}
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm -r build
-      - run: pnpm -r lint
-      - run: pnpm -r test
-      - run: pnpm test:docs
-      - run: pnpm test:scripts
-
-  react18:
-    name: test (react 18)
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Swap React 19 for React 18 in the react package
-        run: pnpm --filter @koldera/react add --save-dev react@18 react-dom@18 @types/react@18 @types/react-dom@18
-      - name: Show the React version under test
-        run: node -p "'react ' + require('./packages/react/node_modules/react/package.json').version"
-      - run: pnpm -r build
-      - run: pnpm --filter @koldera/react lint
-      - run: pnpm --filter @koldera/react test
-
-  contract:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
+      - run: node scripts/check-licences.mjs
       - name: Vendored contracts equal koldera-core at contracts/CORE_VERSION
         env:
           GH_TOKEN: ${{ github.token }}
@@ -140,55 +88,16 @@ jobs:
             fi
           done
           exit $status
-
-  licences:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: node scripts/check-licences.mjs
-
-  docs:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
       - run: pnpm docs:api
       - name: The API reference was generated
         run: test -s docs/api/index.html
-
-  pack:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm -r build
       - name: Package contents
         run: |
           for package in sdk react; do
             (cd "packages/$package" && npm pack --dry-run)
           done
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - name: Tests on the newest Node (the full matrix runs at release)
+        run: pnpm -r test

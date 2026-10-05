@@ -1,0 +1,55 @@
+name: Compatibility matrix
+
+# The wide compatibility matrix. Called by release.yml for tagged commits only; never runs per change.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (node ${{ matrix.node }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r build
+      - run: pnpm -r lint
+      - run: pnpm -r test
+      - run: pnpm test:docs
+      - run: pnpm test:scripts
+
+  react18:
+    name: test (react 18)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Swap React 19 for React 18 in the react package
+        run: pnpm --filter @koldera/react add --save-dev react@18 react-dom@18 @types/react@18 @types/react-dom@18
+      - name: Show the React version under test
+        run: node -p "'react ' + require('./packages/react/node_modules/react/package.json').version"
+      - run: pnpm -r build
+      - run: pnpm --filter @koldera/react lint
+      - run: pnpm --filter @koldera/react test
