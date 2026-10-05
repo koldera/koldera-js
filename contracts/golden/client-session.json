@@ -1,0 +1,35 @@
+{
+  "name": "client-session",
+  "operationId": "createClientSession",
+  "auth": "server",
+  "request": {
+    "method": "POST",
+    "path": "/v1/client-sessions",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "allowedOrigin": "https://app.example.com",
+      "scopes": [
+        "jobs:create",
+        "jobs:read"
+      ],
+      "maxJobs": 3,
+      "maxUploads": 6,
+      "ttlSeconds": 600
+    }
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "sessionToken": "v1.eyJmYWtlIjoidHJ1ZSJ9.ZmFrZS1zaWduYXR1cmU",
+      "expiresAt": "2026-10-05T10:10:00Z",
+      "publishableKey": null
+    }
+  },
+  "notes": "Server tokens only. publishableKey is always null in koldera-core; the SDK must not require it. The token is v1.<b64url>.<b64url>."
+}

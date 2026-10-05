@@ -1,0 +1,21 @@
+{
+  "name": "koldera-js",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.22.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "hygiene": "node scripts/check-source-hygiene.mjs",
+    "hygiene:test": "node --test scripts/check-source-hygiene.test.mjs"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

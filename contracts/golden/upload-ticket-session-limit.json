@@ -1,0 +1,33 @@
+{
+  "name": "upload-ticket-session-limit",
+  "operationId": "createUpload",
+  "auth": "session",
+  "request": {
+    "method": "POST",
+    "path": "/v1/uploads",
+    "headers": {
+      "Authorization": "Bearer {{sessionToken}}",
+      "Content-Type": "application/json",
+      "Idempotency-Key": "{{idempotencyKey}}"
+    },
+    "body": {
+      "fileName": "sample.pdf",
+      "sizeBytes": 45,
+      "sha256": "5a838678058f6de375e8635b5f2fea47a4e5f07cb1a882a44b10f39abc6f34ff",
+      "contentType": "application/pdf"
+    }
+  },
+  "response": {
+    "status": 429,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "body": {
+      "type": "about:blank",
+      "title": "Session upload limit reached",
+      "status": 429,
+      "code": "SESSION_UPLOAD_LIMIT",
+      "detail": "This client session has used its upload budget; mint a new session."
+    }
+  }
+}

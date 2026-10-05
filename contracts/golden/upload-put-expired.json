@@ -1,0 +1,30 @@
+{
+  "name": "upload-put-expired",
+  "operationId": "putUploadContent",
+  "auth": "server",
+  "request": {
+    "method": "PUT",
+    "path": "/v1/uploads/11111111-1111-4111-8111-111111111111/content?exp=1790000000&sig=ZmFrZS1zaWduYXR1cmUtZm9yLXRlc3Rz",
+    "headers": {
+      "Content-Type": "application/pdf"
+    },
+    "rawBody": "%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n",
+    "sha256": "5a838678058f6de375e8635b5f2fea47a4e5f07cb1a882a44b10f39abc6f34ff",
+    "forbiddenHeaders": [
+      "Authorization"
+    ]
+  },
+  "response": {
+    "status": 410,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "body": {
+      "type": "about:blank",
+      "title": "Upload expired",
+      "status": 410,
+      "code": "UPLOAD_EXPIRED",
+      "detail": "The upload record has expired; declare a new upload."
+    }
+  }
+}

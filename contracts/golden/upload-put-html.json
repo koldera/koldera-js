@@ -1,0 +1,21 @@
+{
+  "name": "upload-put-html",
+  "operationId": "putUploadContent",
+  "auth": "server",
+  "request": {
+    "method": "PUT",
+    "path": "/v1/uploads/22222222-2222-4222-8222-222222222222/content?exp=1790000000&sig=ZmFrZS1zaWduYXR1cmUtZm9yLXRlc3Rz",
+    "headers": {
+      "Content-Type": "text/html"
+    },
+    "rawBody": "<!doctype html><html lang=\"en\"><title>Sample</title><p>Hello</p></html>\n",
+    "sha256": "758da1773e40e0a6a159e60004b17da878d1e0be0cf4d375e9e8ecb22bdcc0e0",
+    "forbiddenHeaders": [
+      "Authorization"
+    ]
+  },
+  "response": {
+    "status": 204,
+    "headers": {}
+  }
+}

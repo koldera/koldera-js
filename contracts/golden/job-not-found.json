@@ -1,0 +1,24 @@
+{
+  "name": "job-not-found",
+  "operationId": "getJob",
+  "auth": "server",
+  "request": {
+    "method": "GET",
+    "path": "/v1/jobs/4d2d5a6e-2b1c-4e4a-9d6b-1f3c5e7a9b02",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}"
+    }
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "body": {
+      "type": "about:blank",
+      "title": "Not found",
+      "status": 404,
+      "code": "NOT_FOUND"
+    }
+  }
+}

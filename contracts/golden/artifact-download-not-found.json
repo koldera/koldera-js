@@ -1,0 +1,25 @@
+{
+  "name": "artifact-download-not-found",
+  "operationId": "downloadArtifact",
+  "auth": "server",
+  "request": {
+    "method": "GET",
+    "path": "/v1/artifacts/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3/content?exp=1790000000&sig=ZmFrZS1zaWduYXR1cmUtZm9yLXRlc3Rz",
+    "headers": {},
+    "forbiddenHeaders": [
+      "Authorization"
+    ]
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "body": {
+      "type": "about:blank",
+      "title": "Not found",
+      "status": 404,
+      "code": "NOT_FOUND"
+    }
+  }
+}

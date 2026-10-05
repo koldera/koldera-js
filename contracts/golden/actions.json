@@ -1,0 +1,36 @@
+{
+  "name": "actions",
+  "operationId": "listActions",
+  "auth": "server",
+  "request": {
+    "method": "GET",
+    "path": "/v1/jobs/4d2d5a6e-2b1c-4e4a-9d6b-1f3c5e7a9b01/actions",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "items": [
+        {
+          "ruleId": "PDF_TITLE_V1",
+          "outcome": "applied",
+          "reason": "Title written from the file name.",
+          "before": null,
+          "after": "sample"
+        },
+        {
+          "ruleId": "PDF_FONT_EMBEDDING_V1",
+          "outcome": "rolled_back",
+          "reason": "Glyph positions changed.",
+          "before": null,
+          "after": null
+        }
+      ]
+    }
+  }
+}

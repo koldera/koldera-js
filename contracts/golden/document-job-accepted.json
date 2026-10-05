@@ -1,0 +1,82 @@
+{
+  "name": "document-job-accepted",
+  "operationId": "createDocumentJob",
+  "auth": "server",
+  "request": {
+    "method": "POST",
+    "path": "/v1/documents/jobs",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}",
+      "Content-Type": "application/json",
+      "Idempotency-Key": "{{idempotencyKey}}"
+    },
+    "body": {
+      "title": "Invoice 2026-0042",
+      "language": "en",
+      "body": [
+        {
+          "type": "heading",
+          "level": 1,
+          "text": "Invoice 2026-0042"
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            "Thank you ",
+            {
+              "strong": "very much"
+            },
+            "."
+          ]
+        },
+        {
+          "type": "table",
+          "caption": "Items billed",
+          "header": [
+            [
+              "Description",
+              "Amount"
+            ]
+          ],
+          "rows": [
+            [
+              "Consulting",
+              "1000.00"
+            ]
+          ]
+        },
+        {
+          "type": "image",
+          "uploadId": "33333333-3333-4333-8333-333333333333",
+          "alt": "Company logo: a blue square"
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 202,
+    "headers": {
+      "Content-Type": "application/json",
+      "Location": "/v1/jobs/4d2d5a6e-2b1c-4e4a-9d6b-1f3c5e7a9b02"
+    },
+    "body": {
+      "id": "4d2d5a6e-2b1c-4e4a-9d6b-1f3c5e7a9b02",
+      "kind": "document_to_pdf",
+      "mode": "generate_analyze",
+      "state": "queued",
+      "createdAt": "2026-10-05T10:00:00Z",
+      "startedAt": null,
+      "finishedAt": null,
+      "validation": null,
+      "baselineValidation": null,
+      "finalValidation": null,
+      "remediationStatus": null,
+      "manualReviewRequired": true,
+      "engineVersion": null,
+      "error": null,
+      "targetUrl": null,
+      "contentSelector": null
+    }
+  },
+  "notes": "The body is the document itself, not wrapped. Images reference uploads by uploadId."
+}

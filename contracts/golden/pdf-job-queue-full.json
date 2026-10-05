@@ -1,0 +1,34 @@
+{
+  "name": "pdf-job-queue-full",
+  "operationId": "createPdfJob",
+  "auth": "server",
+  "request": {
+    "method": "POST",
+    "path": "/v1/pdf/jobs",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}",
+      "Content-Type": "application/json",
+      "Idempotency-Key": "{{idempotencyKey}}"
+    },
+    "body": {
+      "uploadId": "11111111-1111-4111-8111-111111111111",
+      "mode": "fix",
+      "profile": "ua1"
+    }
+  },
+  "response": {
+    "status": 503,
+    "headers": {
+      "Content-Type": "application/problem+json",
+      "Retry-After": "30"
+    },
+    "body": {
+      "type": "about:blank",
+      "title": "Job queue is full",
+      "status": 503,
+      "code": "QUEUE_FULL",
+      "detail": "Try again shortly."
+    }
+  },
+  "notes": "Retry-After is whole seconds. The Idempotency-Key makes a retry safe."
+}

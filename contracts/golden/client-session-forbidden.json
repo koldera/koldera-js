@@ -1,0 +1,29 @@
+{
+  "name": "client-session-forbidden",
+  "operationId": "createClientSession",
+  "auth": "session",
+  "request": {
+    "method": "POST",
+    "path": "/v1/client-sessions",
+    "headers": {
+      "Authorization": "Bearer {{sessionToken}}",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "allowedOrigin": "https://app.example.com"
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "body": {
+      "type": "about:blank",
+      "title": "Forbidden",
+      "status": 403,
+      "code": "FORBIDDEN",
+      "detail": "A client session cannot mint sessions."
+    }
+  }
+}

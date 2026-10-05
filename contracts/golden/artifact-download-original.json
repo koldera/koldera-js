@@ -1,0 +1,25 @@
+{
+  "name": "artifact-download-original",
+  "operationId": "downloadArtifact",
+  "auth": "server",
+  "request": {
+    "method": "GET",
+    "path": "/v1/artifacts/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1/content?exp=1790000000&sig=ZmFrZS1zaWduYXR1cmUtZm9yLXRlc3Rz",
+    "headers": {},
+    "forbiddenHeaders": [
+      "Authorization"
+    ]
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/pdf",
+      "Content-Length": "45",
+      "Content-Disposition": "attachment; filename=\"original.pdf\"",
+      "X-Content-Type-Options": "nosniff"
+    },
+    "rawBody": "%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n",
+    "sha256": "5a838678058f6de375e8635b5f2fea47a4e5f07cb1a882a44b10f39abc6f34ff"
+  },
+  "notes": "Signed URL, no bearer. The SDK verifies the SHA-256 of the received bytes against the artifact record."
+}

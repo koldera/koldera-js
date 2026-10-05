@@ -1,0 +1,43 @@
+{
+  "name": "web-job-accepted",
+  "operationId": "createWebJob",
+  "auth": "server",
+  "request": {
+    "method": "POST",
+    "path": "/v1/web/jobs",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}",
+      "Content-Type": "application/json",
+      "Idempotency-Key": "{{idempotencyKey}}"
+    },
+    "body": {
+      "url": "https://example.com/page"
+    }
+  },
+  "response": {
+    "status": 202,
+    "headers": {
+      "Content-Type": "application/json",
+      "Location": "/v1/jobs/4d2d5a6e-2b1c-4e4a-9d6b-1f3c5e7a9b02"
+    },
+    "body": {
+      "id": "4d2d5a6e-2b1c-4e4a-9d6b-1f3c5e7a9b02",
+      "kind": "web",
+      "mode": "scan",
+      "state": "queued",
+      "createdAt": "2026-10-05T10:00:00Z",
+      "startedAt": null,
+      "finishedAt": null,
+      "validation": null,
+      "baselineValidation": null,
+      "finalValidation": null,
+      "remediationStatus": null,
+      "manualReviewRequired": true,
+      "engineVersion": null,
+      "error": null,
+      "targetUrl": "https://example.com/page",
+      "contentSelector": null
+    }
+  },
+  "notes": "targetUrl never carries a query string or fragment."
+}

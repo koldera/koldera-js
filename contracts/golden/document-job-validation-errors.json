@@ -1,0 +1,56 @@
+{
+  "name": "document-job-validation-errors",
+  "operationId": "createDocumentJob",
+  "auth": "server",
+  "request": {
+    "method": "POST",
+    "path": "/v1/documents/jobs",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}",
+      "Content-Type": "application/json",
+      "Idempotency-Key": "{{idempotencyKey}}"
+    },
+    "body": {
+      "title": "T",
+      "language": "en",
+      "body": [
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "Skipped"
+        },
+        {
+          "type": "image",
+          "uploadId": "33333333-3333-4333-8333-333333333333",
+          "alt": ""
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "body": {
+      "type": "about:blank",
+      "title": "Invalid document",
+      "status": 422,
+      "code": "VALIDATION_ERROR",
+      "detail": "The document has 2 problems; see errors.",
+      "errors": [
+        {
+          "path": "/body/0/level",
+          "code": "HEADING_LEVEL_SKIPPED",
+          "message": "The first heading must be level 1 or 2."
+        },
+        {
+          "path": "/body/1/alt",
+          "code": "IMAGE_ALT_MISSING",
+          "message": "An image needs a description."
+        }
+      ]
+    }
+  },
+  "notes": "422 with errors[]: one entry per problem, path is a JSON Pointer."
+}
