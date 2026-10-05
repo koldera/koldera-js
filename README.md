@@ -17,7 +17,7 @@ Status: early release (0.1). The API may change before 1.0.
 | [`@koldera/react`](packages/react) | `KolderaProvider` and hooks (`usePdfJob`, `useHtmlToPdfJob`, `useDocumentJob`, `useWebScan`, `useReadingOrder`). React 18 or 19. |
 
 The API reference (TypeDoc) is published to GitHub Pages with each release and built in CI on every pull request
-(`pnpm docs`).
+(`pnpm docs:api`).
 
 ## Install
 

@@ -29,7 +29,7 @@ pnpm -r lint          # type checks sources and tests
 pnpm -r test          # unit tests of both packages
 pnpm test:docs        # README examples are compiled against the built packages
 pnpm test:scripts     # tests of the repository scripts
-pnpm docs             # TypeDoc into docs/api (not committed)
+pnpm docs:api             # TypeDoc into docs/api (not committed)
 ```
 
 `pnpm test` runs the package tests, the docs test and the script tests together.

@@ -65,8 +65,8 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm -r lint
       - run: pnpm -r build
+      - run: pnpm -r lint
       - run: pnpm -r test
       - run: pnpm test:docs
       - run: pnpm test:scripts
@@ -86,7 +86,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Swap React 19 for React 18 in the react package
-        run: pnpm --filter @koldera/react add --save-dev --no-frozen-lockfile react@18 react-dom@18 @types/react@18 @types/react-dom@18
+        run: pnpm --filter @koldera/react add --save-dev react@18 react-dom@18 @types/react@18 @types/react-dom@18
       - name: Show the React version under test
         run: node -p "'react ' + require('./packages/react/node_modules/react/package.json').version"
       - run: pnpm --filter @koldera/sdk build
@@ -169,7 +169,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm docs
+      - run: pnpm docs:api
       - name: The API reference was generated
         run: test -s docs/api/index.html
 
