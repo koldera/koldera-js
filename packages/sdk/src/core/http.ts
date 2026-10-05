@@ -58,8 +58,8 @@ export class Transport {
 
   constructor(private readonly options: TransportOptions) {
     this.baseUrl = normalizeBaseUrl(options.baseUrl);
-    this.fetchImpl = options.fetch ?? defaultFetch();
-    this.storageFetchImpl = options.storageFetch ?? defaultFetch();
+    this.fetchImpl = options.fetch ?? defaultFetch("fetch");
+    this.storageFetchImpl = options.storageFetch ?? defaultFetch("storageFetch");
     this.timeoutMs = options.timeoutMs ?? 30_000;
     this.storageTimeoutMs = options.storageTimeoutMs ?? 600_000;
     this.userAgent = options.sendUserAgent === false ? undefined : `${SDK_NAME}/${SDK_VERSION}${options.userAgentSuffix ? " " + options.userAgentSuffix : ""}`;
@@ -288,9 +288,9 @@ function normalizeBaseUrl(value: string): string {
   return value.replace(/\/+$/, "");
 }
 
-function defaultFetch(): FetchLike {
+function defaultFetch(option: string): FetchLike {
   if (typeof globalThis.fetch !== "function") {
-    throw new ConfigurationError("no global fetch; pass options.fetch");
+    throw new ConfigurationError(`no global fetch; pass options.${option}`);
   }
   return (input, init) => globalThis.fetch(input, init);
 }
