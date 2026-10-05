@@ -1,0 +1,20 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "Koldera JavaScript SDK",
+  "entryPoints": [
+    "packages/sdk/src/index.ts",
+    "packages/sdk/src/node/index.ts",
+    "packages/sdk/src/browser/index.ts",
+    "packages/react/src/index.tsx"
+  ],
+  "entryPointStrategy": "resolve",
+  "tsconfig": "tsconfig.typedoc.json",
+  "out": "docs/api",
+  "readme": "README.md",
+  "githubPages": true,
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "treatWarningsAsErrors": false,
+  "validation": { "notExported": false, "invalidLink": true, "notDocumented": false },
+  "navigation": { "includeCategories": false, "includeGroups": false }
+}

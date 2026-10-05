@@ -1,0 +1,130 @@
+# Contributing
+
+Thanks for helping. Please read this page and the [Code of Conduct](CODE_OF_CONDUCT.md) first.
+
+## Before you start
+
+- For a bug or a small fix, open a pull request or an issue.
+- For a new feature or a change to the public API, open an issue first so we can agree on the shape before you write
+  code.
+- Report security problems privately, see [SECURITY.md](SECURITY.md).
+- Server behaviour and the HTTP API belong to [koldera-core](https://github.com/koldera/koldera-core). This repository
+  only wraps them. Changes must not make the SDK claim more than a machine check: no claim that a document is "accessible"
+  or conformant, no generated alternative text, no guessed structure.
+
+## Licence of contributions
+
+The project is licensed under Apache-2.0. By submitting a contribution you agree that it is licensed under the same
+terms (section 5 of the licence). There is no CLA and no DCO sign-off.
+
+## Setup
+
+You need Node.js 20 or later (22 is what CI uses for the main checks) and pnpm 10 (`corepack enable` picks the pinned
+version from `package.json`).
+
+```bash
+pnpm install --frozen-lockfile
+pnpm -r build
+pnpm -r lint          # type checks sources and tests
+pnpm -r test          # unit tests of both packages
+pnpm test:docs        # README examples are compiled against the built packages
+pnpm test:scripts     # tests of the repository scripts
+pnpm docs             # TypeDoc into docs/api (not committed)
+```
+
+`pnpm test` runs the package tests, the docs test and the script tests together.
+
+### React 18
+
+The tests run against React 19. CI also runs them against React 18. To do it locally:
+
+```bash
+cd packages/react
+pnpm add -D react@18 react-dom@18 @types/react@18 @types/react-dom@18 --no-lockfile
+pnpm test
+git checkout package.json    # do not commit the downgrade
+```
+
+### Contracts
+
+`contracts/openapi.yaml` and the schemas next to it are copied from koldera-core at the commit named in
+`contracts/CORE_VERSION`, and the golden fixtures drive the SDK tests. When koldera-core changes its API, update the
+copy and the commit id together; CI fetches the file at that commit and fails on a difference.
+
+### Source hygiene and licences
+
+```bash
+node scripts/check-source-hygiene.mjs   # must exit 0
+node scripts/check-licences.mjs         # dependency licences must be on the allow-list
+```
+
+The hygiene check scans for internal planning references, hosted-service hostnames, long comment blocks and wording that
+claims more than a machine check can. Say what was checked and that human review is still required.
+
+## Making a change
+
+- **Test first.** Write a failing test for the behaviour, then the smallest change that passes it.
+- **Keep the public surface honest.** If you add or change an export, update the README example that shows it; the docs
+  test fails when an example no longer compiles.
+- **Browser safety.** The browser entry points must not import Node built-ins, read the environment or mint sessions;
+  a bundle-scan test enforces it.
+- **No real documents or credentials.** Fixtures are synthetic. Never commit tokens, keys or personal data.
+- Pin dependencies exactly and keep `pnpm-lock.yaml` in the same commit.
+
+## Commit style
+
+Small focused commits, imperative mood, plain messages that say what changed and why when it is not obvious:
+
+```text
+Refuse a session token with surrounding whitespace in the browser client
+Repeat a creation call after a connection reset with the same idempotency key
+Document the compatibility table
+```
+
+Avoid messages like "update" or "fix".
+
+## Pull requests
+
+Describe what changed and why, list the commands you ran with their results, and note anything you could not run. Keep
+a pull request to one concern. The Koldera team reviews it; expect questions about tests and about what a change could
+make the SDK claim. The repository is squash-merged.
+
+## Releasing
+
+Releases are made by the maintainers. A release publishes both packages with the same version.
+
+One-time setup by the owner:
+
+1. Create the npm organisation `koldera` (https://www.npmjs.com/org/create) and make sure the publishing account is an
+   owner.
+2. Publish nothing by hand. For each package, `@koldera/sdk` and `@koldera/react`, open the package settings on npmjs.com
+   (for a scope that has no package yet, create the first version through "Trusted publisher" pending setup, or publish
+   a placeholder once with your own account), choose "Trusted Publisher", select GitHub Actions, and enter
+   organisation `koldera`, repository `koldera-js`, workflow `release.yml`. Leave the environment empty.
+3. In the GitHub repository settings, open Pages and set the source to "GitHub Actions".
+4. Optional: after publishing, restrict token publishing for each package ("Require two-factor authentication and
+   disallow tokens") so trusted publishing is the only route.
+
+No `NPM_TOKEN` secret is used. The workflow authenticates to npm with GitHub's OIDC token and needs npm 11.5.1 or later
+(the workflow installs it).
+
+To release:
+
+1. Make sure `main` is green. Set the same `version` in `packages/sdk/package.json` and `packages/react/package.json`,
+   and move the changelog entry from "Unreleased" to the version and date. The `@koldera/react` dependency on
+   `@koldera/sdk` is `workspace:^` and is rewritten to the real range on publish.
+2. Commit and merge that change through a pull request.
+3. Tag the merged commit and push the tag:
+
+   ```bash
+   git tag v0.1.0 <commit-on-main>
+   git push origin v0.1.0
+   ```
+
+4. `release.yml` verifies that the tag matches both package versions and sits on `main`, runs the whole CI workflow for
+   that commit, publishes both packages with provenance, creates the GitHub Release with generated notes and deploys the
+   TypeDoc site to GitHub Pages.
+
+If a publish fails halfway (for example only one package went out), fix the cause and re-run the failed jobs: the publish
+step skips a version that is already on npm and publishes the rest. Never reuse a version number for different content;
+bump to the next patch version instead.
