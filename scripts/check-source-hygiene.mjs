@@ -16,7 +16,7 @@ const RULES = [
 const SLASH = /^\s*(\/\/|\*|\/\*)/;
 const HASH = /^\s*#(?!!)/;
 const MARKUP = /^\s*<!--/;
-const SKIP_DIRS = new Set([".git", "node_modules", "target", "bin", "obj", "dist", ".gradle"]);
+const SKIP_DIRS = new Set([".git", "node_modules", "target", "bin", "obj", "dist", ".gradle", ".docs-check"]);
 const SKIP_FILES = new Set(["LICENSE", "NOTICE", "check-source-hygiene.mjs", "check-source-hygiene.test.mjs", "pnpm-lock.yaml", "package-lock.json", "packages.lock.json"]);
 const DOCKERFILE = /^Dockerfile(\..*)?$|\.Dockerfile$/;
 const EXTENSIONS = /\.(java|cs|ts|tsx|mjs|js|md|yaml|yml|json|xml|properties|toml|conf|sh|csproj|props|slnx|kts|gradle|html|css|sql|ps1|cmd|txt)$/;
@@ -49,7 +49,11 @@ function isScanned(p) {
 
 function* walk(p) {
   if (statSync(p).isDirectory()) {
-    for (const name of readdirSync(p)) if (!SKIP_DIRS.has(name)) yield* walk(path.join(p, name));
+    for (const name of readdirSync(p)) {
+      const child = path.join(p, name);
+      // docs/api is generated TypeDoc output, not source.
+      if (!SKIP_DIRS.has(name) && !child.split(path.sep).join("/").endsWith("docs/api")) yield* walk(child);
+    }
   } else if (isScanned(p)) {
     yield p;
   }

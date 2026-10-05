@@ -1,0 +1,135 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  # The full CI workflow for the tagged commit: nothing is published unless every job passes.
+  ci:
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: The tag points at a commit on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+      - name: The tag matches the version of both packages
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          for package in sdk react; do
+            found="$(node -p "require('./packages/$package/package.json').version")"
+            if [ "$found" != "$version" ]; then
+              echo "::error::packages/$package has version $found but the tag is $GITHUB_REF_NAME"
+              exit 1
+            fi
+          done
+
+  publish:
+    needs: [ci, verify]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing (OIDC) and provenance; there is no NPM_TOKEN
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+      - name: npm with trusted publishing support (11.5.1 or later)
+        run: |
+          npm install -g npm@11
+          npm --version
+          node -e "const [a,b,c]=process.argv[1].split('.').map(Number); if (a<11 || (a===11 && (b<5 || (b===5 && c<1)))) { console.error('npm too old for trusted publishing'); process.exit(1); }" "$(npm --version)"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r build
+      # pnpm pack rewrites workspace:^ to the real version range; npm then publishes the tarball.
+      - name: Pack
+        run: |
+          mkdir -p "$RUNNER_TEMP/pack"
+          pnpm --filter @koldera/sdk pack --pack-destination "$RUNNER_TEMP/pack"
+          pnpm --filter @koldera/react pack --pack-destination "$RUNNER_TEMP/pack"
+          ls -l "$RUNNER_TEMP/pack"
+          tar -xOzf "$RUNNER_TEMP"/pack/koldera-react-*.tgz package/package.json | grep -n '"@koldera/sdk"'
+      - name: Publish with provenance (skips a version that is already on npm)
+        run: |
+          for package in sdk react; do
+            name="@koldera/$package"
+            version="$(node -p "require('./packages/$package/package.json').version")"
+            if npm view "$name@$version" version >/dev/null 2>&1; then
+              echo "$name@$version is already published, skipping"
+              continue
+            fi
+            npm publish "$RUNNER_TEMP"/pack/koldera-"$package"-*.tgz --provenance --access public
+          done
+
+  github-release:
+    needs: publish
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write # gh release create
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: GitHub Release with generated notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags=(--generate-notes --verify-tag --title "$GITHUB_REF_NAME")
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then flags+=(--prerelease); fi
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists"
+          else
+            gh release create "$GITHUB_REF_NAME" "${flags[@]}"
+          fi
+
+  pages:
+    needs: publish
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm docs:api
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: docs/api
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

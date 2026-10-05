@@ -1,0 +1,53 @@
+name: Bug report
+description: Something does not work as documented
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Do not attach real customer documents or secrets; a small synthetic file or a minimal
+        script that shows the problem is enough. Security problems go through the private report described in
+        SECURITY.md, not here.
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      options:
+        - "@koldera/sdk (server, Node.js)"
+        - "@koldera/sdk (browser)"
+        - "@koldera/react"
+        - Documentation
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: SDK version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: core
+    attributes:
+      label: koldera-core version
+      description: From `GET /v1/info` or the image tag
+      placeholder: 0.1.0
+  - type: input
+    id: runtime
+    attributes:
+      label: Runtime
+      description: Node.js version, browser, React version
+      placeholder: Node.js 22.11, React 19
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Steps to reproduce, what you expected and what you got. Include the problem `code` of an `ApiError` if there is one.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or output
+      description: Remove tokens, URLs with credentials and document content.
+      render: text
