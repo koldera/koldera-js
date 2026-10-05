@@ -39,10 +39,41 @@ jobs:
             fi
           done
 
-  publish:
+  pages:
     needs: [ci, verify]
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm docs:api
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: docs/api
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  publish:
+    # Pages runs first: publishing to npm is the point of no return, so it is the last step that can fail a release.
+    needs: [ci, verify, pages]
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
+    environment: npm # add required reviewers to this environment to approve each release
     permissions:
       contents: read
       id-token: write # npm trusted publishing (OIDC) and provenance; there is no NPM_TOKEN
@@ -58,7 +89,7 @@ jobs:
           cache: pnpm
       - name: npm with trusted publishing support (11.5.1 or later)
         run: |
-          npm install -g npm@11
+          npm install -g npm@11.21.0
           npm --version
           node -e "const [a,b,c]=process.argv[1].split('.').map(Number); if (a<11 || (a===11 && (b<5 || (b===5 && c<1)))) { console.error('npm too old for trusted publishing'); process.exit(1); }" "$(npm --version)"
       - run: pnpm install --frozen-lockfile
@@ -70,7 +101,14 @@ jobs:
           pnpm --filter @koldera/sdk pack --pack-destination "$RUNNER_TEMP/pack"
           pnpm --filter @koldera/react pack --pack-destination "$RUNNER_TEMP/pack"
           ls -l "$RUNNER_TEMP/pack"
-          tar -xOzf "$RUNNER_TEMP"/pack/koldera-react-*.tgz package/package.json | grep -n '"@koldera/sdk"'
+          tar -xOzf "$RUNNER_TEMP"/pack/koldera-react-*.tgz package/package.json > "$RUNNER_TEMP/react-package.json"
+          version="$(node -p "require('./packages/react/package.json').version")"
+          dependency="$(node -p "require(process.argv[1]).dependencies['@koldera/sdk']" "$RUNNER_TEMP/react-package.json")"
+          echo "packed @koldera/react depends on @koldera/sdk $dependency"
+          if [ "$dependency" != "^$version" ]; then
+            echo "::error::packed @koldera/react must depend on @koldera/sdk ^$version, found $dependency"
+            exit 1
+          fi
       - name: Publish with provenance (skips a version that is already on npm)
         run: |
           for package in sdk react; do
@@ -104,32 +142,3 @@ jobs:
           else
             gh release create "$GITHUB_REF_NAME" "${flags[@]}"
           fi
-
-  pages:
-    needs: publish
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm docs:api
-      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        with:
-          path: docs/api
-      - id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
