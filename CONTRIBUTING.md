@@ -47,9 +47,12 @@ git checkout package.json    # do not commit the downgrade
 
 ### Contracts
 
-`contracts/openapi.yaml` and the schemas next to it are copied from koldera-core at the commit named in
-`contracts/CORE_VERSION`, and the golden fixtures drive the SDK tests. When koldera-core changes its API, update the
-copy and the commit id together; CI fetches the file at that commit and fails on a difference.
+`contracts/` is a mirror of [sdk-contract-kit](https://github.com/koldera/sdk-contract-kit): `openapi.yaml` and the
+schemas next to it come from koldera-core at the commit named in `contracts/CORE_VERSION`, the golden fixtures drive
+the SDK tests, and `contracts/KIT_VERSION` names the kit commit. Do not edit `contracts/` here: change the kit and run
+its `scripts/sync-to-sdk.mjs` against this repository. CI fetches the kit at `contracts/KIT_VERSION` and fails on any
+difference in `contracts/` (it is skipped with a notice while sdk-contract-kit is private and not readable with the
+workflow token).
 
 ### Source hygiene and licences
 
@@ -137,10 +140,9 @@ publishing needs npm 11.5.1 or later and Node 22.14 or later) and fails if the v
 
 ### Releasing a version
 
-1. Make sure `main` is green. Until koldera-core is public the CI contract job cannot read it and reports "skipped", so
-   run the check yourself first: compare `contracts/openapi.yaml`, `document.schema.json` and `problem.schema.json`
-   with koldera-core at the commit in `contracts/CORE_VERSION` (for example `git -C ../koldera-core show
-   <commit>:contracts/openapi.yaml | diff - contracts/openapi.yaml`).
+1. Make sure `main` is green. Until sdk-contract-kit is public the CI contract check is skipped, so run it by hand:
+   from a clean sdk-contract-kit checkout at the commit in `contracts/KIT_VERSION`, run
+   `node scripts/sync-to-sdk.mjs <this repository>` and check that `git status` shows no change in `contracts/`.
 2. Set the same `version` in `packages/sdk/package.json` and `packages/react/package.json` (the SDK user agent is
    generated from it at build time), and move the changelog entry from "Unreleased" to the version and date. The
    `@koldera/react` dependency on `@koldera/sdk` is `workspace:^`; the workflow checks that the packed package
