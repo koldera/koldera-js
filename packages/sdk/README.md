@@ -1,6 +1,6 @@
 # @koldera/sdk
 
-JavaScript and TypeScript client for [koldera-core](https://github.com/koldera/koldera-core): PDF/UA-1 machine checks
+JavaScript and TypeScript client for koldera-core: PDF/UA-1 machine checks
 and fixed copies, HTML and structured documents to tagged PDF, web scans. Results are machine checks; a person still
 reviews them.
 
