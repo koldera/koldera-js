@@ -50,46 +50,42 @@ jobs:
       - name: Secrets in the git history
         run: ./gitleaks git . --config .gitleaks.toml --redact --no-banner
       - run: node scripts/check-licences.mjs
-      - name: Vendored contracts equal koldera-core at contracts/CORE_VERSION
+      - name: Vendored contracts equal sdk-contract-kit at contracts/KIT_VERSION
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          sha="$(tr -d '[:space:]' < contracts/CORE_VERSION)"
-          [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::contracts/CORE_VERSION must hold a 40-character commit id"; exit 1; }
-          mkdir core
-          raw="https://api.github.com/repos/koldera/koldera-core/contents/contracts"
-          files="openapi.yaml document.schema.json problem.schema.json"
+          sha="$(tr -d '[:space:]' < contracts/KIT_VERSION)"
+          [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::contracts/KIT_VERSION must hold a 40-character commit id"; exit 1; }
+          kit="$RUNNER_TEMP/kit"
+          expected="$RUNNER_TEMP/expected-contracts"
+          mkdir -p "$kit" "$expected"
 
-          # Public repositories can be read without a token; once koldera-core is public the check is mandatory.
+          # Public repositories can be read without a token; once sdk-contract-kit is public the check is mandatory.
           public=false
-          if [ "$(curl -sS -o /dev/null -w '%{http_code}' https://api.github.com/repos/koldera/koldera-core)" = "200" ]; then public=true; fi
+          if [ "$(curl -sS -o /dev/null -w '%{http_code}' https://api.github.com/repos/koldera/sdk-contract-kit)" = "200" ]; then public=true; fi
 
           auth=()
           if ! $public; then auth=(-H "Authorization: Bearer $GH_TOKEN"); fi
-          readable=true
-          for f in $files; do
-            code="$(curl -sS -o "core/$f" -w '%{http_code}' -H "Accept: application/vnd.github.raw+json" "${auth[@]}" "$raw/$f?ref=$sha")"
-            if [ "$code" != "200" ]; then readable=false; echo "fetching $f returned HTTP $code"; break; fi
-          done
-
-          if ! $readable; then
+          code="$(curl -sSL -o "$kit.tar.gz" -w '%{http_code}' "${auth[@]}" "https://api.github.com/repos/koldera/sdk-contract-kit/tarball/$sha")"
+          if [ "$code" != "200" ]; then
+            echo "fetching sdk-contract-kit at $sha returned HTTP $code"
             if $public; then
-              echo "::error::koldera-core is public but contracts at $sha could not be fetched"
+              echo "::error::sdk-contract-kit is public but $sha could not be fetched"
               exit 1
             fi
-            echo "::notice title=Contract check skipped::koldera-core is private and not readable with this workflow's token. The check is enforced once the repository is public."
+            echo "::notice title=Contract check skipped::sdk-contract-kit is private and not readable with this workflow token. The check is enforced once the repository is public."
             exit 0
           fi
 
-          status=0
-          for f in $files; do
-            if ! diff -u "core/$f" "contracts/$f"; then
-              echo "::error::contracts/$f differs from koldera-core at $sha"
-              status=1
-            fi
-          done
-          exit $status
+          # contracts/ must be an exact mirror of the kit at that commit (scripts/sync-to-sdk.mjs in sdk-contract-kit).
+          tar -xzf "$kit.tar.gz" -C "$kit" --strip-components=1
+          cp -R "$kit/openapi.yaml" "$kit/document.schema.json" "$kit/problem.schema.json" "$kit/CORE_VERSION" "$kit/golden" "$expected/"
+          printf '%s\n' "$sha" > "$expected/KIT_VERSION"
+          if ! diff -ru "$expected" contracts; then
+            echo "::error::contracts/ differs from sdk-contract-kit at $sha; re-run scripts/sync-to-sdk.mjs from the kit"
+            exit 1
+          fi
       - run: pnpm docs:api
       - name: The API reference was generated
         run: test -s docs/api/index.html
