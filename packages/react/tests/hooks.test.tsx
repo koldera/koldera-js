@@ -51,6 +51,18 @@ describe("provider", () => {
     expect(server.exchanges.at(-1)!.received.headers["authorization"]).toBe("Bearer " + SESSION_TOKEN);
   });
 
+  it("treats an unparseable expiresAt as no expiry instead of minting before every call", async () => {
+    const grants = vi.fn<() => Promise<SessionGrant>>().mockResolvedValue({ sessionToken: SESSION_TOKEN, expiresAt: "not a date" });
+    const { result } = renderHook(() => useReadingOrder(JOB_ID), { wrapper: ({ children }) => <Provider getSessionToken={grants}>{children}</Provider> });
+    server.expect("reading-order");
+    await waitFor(() => expect(result.current.snapshot).not.toBeNull());
+    server.expect("reading-order");
+    await act(async () => {
+      await result.current.reload();
+    });
+    expect(grants).toHaveBeenCalledTimes(1);
+  });
+
   it("refreshes the session once after a 401 and retries the call", async () => {
     let calls = 0;
     const grants = async (): Promise<SessionGrant> => {

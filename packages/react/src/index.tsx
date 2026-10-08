@@ -110,7 +110,9 @@ export function KolderaProvider({ baseUrl, getSessionToken, children, fetch: fet
             throw new ConfigurationError("getSessionToken must return a session token minted by your backend");
           }
           const expiresAt = typeof grant === "string" ? undefined : grant.expiresAt;
-          cache.current = { token, expiresAtMs: expiresAt ? Date.parse(expiresAt) : null };
+          // An unparseable expiresAt counts as "no expiry": the 401 retry in run() still refreshes the session.
+          const expiresAtMs = expiresAt ? Date.parse(expiresAt) : NaN;
+          cache.current = { token, expiresAtMs: Number.isFinite(expiresAtMs) ? expiresAtMs : null };
           return token;
         } finally {
           inflight.current = null;
