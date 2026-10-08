@@ -8,7 +8,7 @@ Thanks for helping. Please read this page and the [Code of Conduct](CODE_OF_COND
 - For a new feature or a change to the public API, open an issue first so we can agree on the shape before you write
   code.
 - Report security problems privately, see [SECURITY.md](SECURITY.md).
-- Server behaviour and the HTTP API belong to [koldera-core](https://github.com/koldera/koldera-core). This repository
+- Server behaviour and the HTTP API belong to koldera-core. This repository
   only wraps them. Changes must not make the SDK claim more than a machine check: no claim that a document is "accessible"
   or conformant, no generated alternative text, no guessed structure.
 
