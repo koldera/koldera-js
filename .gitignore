@@ -4,3 +4,4 @@ coverage/
 *.tsbuildinfo
 .docs-check/
 /docs/api/
+examples/*/out/
