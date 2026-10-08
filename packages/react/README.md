@@ -1,6 +1,6 @@
 # @koldera/react
 
-React provider and hooks for [koldera-core](https://github.com/koldera/koldera-core), built on
+React provider and hooks for koldera-core, built on
 [`@koldera/sdk`](https://www.npmjs.com/package/@koldera/sdk). Your backend mints a short-lived session; the browser
 never sees a server token.
 
