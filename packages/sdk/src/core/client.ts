@@ -127,7 +127,7 @@ export class Uploads {
       throw new ConfigurationError(`the file (${bytes.byteLength} bytes) exceeds the ticket limit of ${ticket.maxBytes} bytes`);
     }
     try {
-      await this.transport.storage("PUT", ticket.uploadUrl, { body: new Blob([bytes as BlobPart]), contentType, signal: options.signal });
+      await this.transport.storageUpload(ticket.uploadUrl, new Blob([bytes as BlobPart]), contentType, options.signal);
     } catch (error) {
       // A replayed ticket belongs to an earlier attempt whose PUT already stored these exact bytes (size and hash are part of the replayed request).
       const stored = error instanceof StorageError && error.status === 409 && error.code === "UPLOAD_ALREADY_COMPLETED";
@@ -302,8 +302,7 @@ export class Artifacts {
 
   /** Fetch an artifact through its signed URL (no bearer) and verify its size and SHA-256 before returning bytes. */
   async download(artifact: Artifact, options: RequestOptions = {}): Promise<Uint8Array> {
-    const response = await this.transport.storage("GET", artifact.downloadUrl, { signal: options.signal });
-    const bytes = new Uint8Array(await response.arrayBuffer());
+    const bytes = await this.transport.storageDownload(artifact.downloadUrl, artifact.sizeBytes, options.signal);
     if (bytes.byteLength !== artifact.sizeBytes) {
       throw new StorageError(`artifact ${artifact.kind}: received ${bytes.byteLength} bytes, expected ${artifact.sizeBytes}`);
     }

@@ -720,3 +720,91 @@ describe("fix round 1", () => {
     expect([known, future]).toHaveLength(2);
   });
 });
+
+describe("signed storage uses an SDK-owned transport", () => {
+  const ticket = { uploadId: "11111111-1111-4111-8111-111111111111", method: "PUT", uploadUrl: "https://storage.invalid/put?exp=1&sig=SECRETSIG", expiresAt: "2030-01-01T00:00:00Z", maxBytes: 1000 };
+  const apiFetch = async () => json(ticket, 201);
+  const upload = (options: ConstructorParameters<typeof KolderaClient>[0]) => new KolderaClient({ token: SECRET_KEY, baseUrl: server.origin, fetch: apiFetch, ...options }).uploads.upload(PDF_BYTES, "application/pdf", "sample.pdf");
+  const artifact = (bytes: Uint8Array, fields: Partial<Artifact> = {}): Artifact => ({ id: "a", kind: "original", sha256: "0".repeat(64), sizeBytes: bytes.length, downloadUrl: "https://storage.invalid/get?exp=1&sig=SECRETSIG", expiresAt: "2030-01-01T00:00:00Z", ...fields }) as Artifact;
+
+  it("never routes the PUT or GET through the caller's fetch and sends no Authorization", async () => {
+    const callerUrls: string[] = [];
+    const sdk = new KolderaClient({ token: SECRET_KEY, baseUrl: server.origin, fetch: (url, init) => { callerUrls.push(url); return fetch(url, init); } });
+    server.expect("upload-ticket-pdf", "upload-put-pdf");
+    await sdk.uploads.upload(PDF_BYTES, "application/pdf", "sample.pdf");
+    expect(callerUrls).toHaveLength(1);
+    expect(callerUrls[0]).toMatch(/\/v1\/uploads$/);
+    expect(server.exchanges.at(-1)!.received.headers["authorization"]).toBeUndefined();
+    server.expect("artifact-download-original");
+    const real = fixtures["artifact-download-original"]!;
+    const bytes = Buffer.from(real.response.rawBody ?? "", "latin1");
+    await sdk.artifacts.download({ id: "a", kind: "original", sha256: "0".repeat(64), sizeBytes: bytes.length, downloadUrl: server.origin + real.request.path, expiresAt: "2030-01-01T00:00:00Z" } as Artifact).catch(() => undefined);
+    expect(callerUrls).toHaveLength(1);
+    expect(server.exchanges.at(-1)!.received.headers["authorization"]).toBeUndefined();
+  });
+
+  it("calls storage without credentials, redirects or extra headers", async () => {
+    let seen: RequestInit | undefined;
+    await upload({ storageFetch: async (_u, init) => { seen = init; return new Response(null, { status: 200 }); } });
+    expect(seen).toMatchObject({ method: "PUT", credentials: "omit", redirect: "error", headers: { "Content-Type": "application/pdf" } });
+  });
+
+  it("lets an upload run past timeoutMs while it is inside storageTimeoutMs", async () => {
+    await expect(upload({ timeoutMs: 40, storageTimeoutMs: 2000, storageFetch: async () => { await new Promise((r) => setTimeout(r, 150)); return new Response(null, { status: 200 }); } })).resolves.toBeDefined();
+  });
+
+  it("ends an upload that outlasts storageTimeoutMs with a TimeoutError", async () => {
+    const hang = (_u: string, init: RequestInit) => new Promise<Response>((_, reject) => init.signal!.addEventListener("abort", () => reject(init.signal!.reason)));
+    const e = await upload({ storageTimeoutMs: 50, storageFetch: hang }).catch((x: unknown) => x);
+    expect((e as Error).name).toBe("TimeoutError");
+  });
+
+  it("covers the download body with the storage timeout", async () => {
+    const bytes = new Uint8Array([1, 2, 3]);
+    const stalled = async (_u: string, init: RequestInit) => {
+      const body = new ReadableStream<Uint8Array>({ pull: () => new Promise<void>((_, reject) => init.signal!.addEventListener("abort", () => reject(init.signal!.reason))) });
+      return new Response(body, { status: 200 });
+    };
+    const sdk = new KolderaClient({ token: SECRET_KEY, baseUrl: server.origin, storageTimeoutMs: 50, storageFetch: stalled });
+    const e = await sdk.artifacts.download(artifact(bytes)).catch((x: unknown) => x);
+    expect((e as Error).name).toBe("TimeoutError");
+  });
+
+  it("stops reading a download once it exceeds the expected size", async () => {
+    let pulled = 0;
+    let cancelled = false;
+    const endless = async () => new Response(new ReadableStream<Uint8Array>({ pull(c) { pulled += 1; c.enqueue(new Uint8Array(1024)); }, cancel() { cancelled = true; } }), { status: 200 });
+    const sdk = new KolderaClient({ token: SECRET_KEY, baseUrl: server.origin, storageFetch: endless });
+    const e = await sdk.artifacts.download(artifact(new Uint8Array(10))).catch((x: unknown) => x);
+    expect(e).toBeInstanceOf(StorageError);
+    expect(pulled).toBeLessThan(10);
+    expect(cancelled).toBe(true);
+  });
+
+  it("wraps storage transport failures without the signed URL", async () => {
+    const failing = async (url: string) => { throw new TypeError(`Failed to parse URL from ${url}`); };
+    const put = await upload({ storageFetch: failing }).catch((x: unknown) => x);
+    const get = await new KolderaClient({ token: SECRET_KEY, baseUrl: server.origin, storageFetch: failing }).artifacts.download(artifact(new Uint8Array(1))).catch((x: unknown) => x);
+    for (const e of [put, get]) {
+      expect(e).toBeInstanceOf(StorageError);
+      expect(String(e) + JSON.stringify(e) + String((e as Error).cause)).not.toContain("SECRETSIG");
+    }
+  });
+});
+
+describe("error class follows the HTTP status", () => {
+  const sdkReplying = (status: number, body: unknown) => new KolderaClient({ token: SECRET_KEY, baseUrl: server.origin, fetch: async () => json(body, status) });
+
+  it("ignores a body status that disagrees with the HTTP status", async () => {
+    const e = (await sdkReplying(404, { type: "about:blank", title: "t", status: 500, code: "JOB_NOT_FOUND" }).jobs.get(JOB_ID).catch((x: unknown) => x)) as NotFoundError;
+    expect(e).toBeInstanceOf(NotFoundError);
+    expect(e.status).toBe(404);
+    expect(e.code).toBe("JOB_NOT_FOUND");
+  });
+
+  it("keeps the body's code when the body has no numeric status", async () => {
+    const e = (await sdkReplying(429, { title: "t", code: "RATE_LIMITED" }).jobs.get(JOB_ID).catch((x: unknown) => x)) as RateLimitError;
+    expect(e).toBeInstanceOf(RateLimitError);
+    expect(e.code).toBe("RATE_LIMITED");
+  });
+});

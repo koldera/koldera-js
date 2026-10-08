@@ -14,7 +14,11 @@ export interface KolderaBrowserClientOptions {
   /** Short-lived session token minted by your backend with the server SDK; a function is called before each request. */
   sessionToken: string | (() => string | Promise<string>);
   fetch?: FetchLike;
+  /** Fetch for signed storage URLs; defaults to the global `fetch`. Must not add credentials. */
+  storageFetch?: FetchLike;
   timeoutMs?: number;
+  /** Timeout of a whole upload or download in milliseconds (default 600 000). */
+  storageTimeoutMs?: number;
 }
 
 /**
@@ -41,6 +45,6 @@ export class KolderaBrowserClient extends CoreClient {
       }
       return token;
     };
-    super(new Transport({ baseUrl: options.baseUrl, bearer, fetch: options.fetch, timeoutMs: options.timeoutMs, sendUserAgent: false }));
+    super(new Transport({ baseUrl: options.baseUrl, bearer, fetch: options.fetch, storageFetch: options.storageFetch, timeoutMs: options.timeoutMs, storageTimeoutMs: options.storageTimeoutMs, sendUserAgent: false }));
   }
 }
