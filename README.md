@@ -316,6 +316,13 @@ that the copy matches. Run koldera-core as described in its
 [README](https://github.com/koldera/koldera-core#readme) and
 [deployment guide](https://github.com/koldera/koldera-core/blob/main/docs/deployment.md).
 
+## Examples
+
+Runnable demonstrations against a koldera-core you start locally, with synthetic inputs (not published to npm):
+
+- [examples/node-pdf-demo](examples/node-pdf-demo): analyze a PDF, write a fixed copy, download it, list what needs a person.
+- [examples/structured-invoice-demo](examples/structured-invoice-demo): a synthetic invoice as a structured document to a tagged PDF.
+
 ## Links
 
 - [koldera-core](https://github.com/koldera/koldera-core): the service, API reference and deployment guide.

@@ -34,6 +34,18 @@ pnpm docs:api             # TypeDoc into docs/api (not committed)
 
 `pnpm test` runs the package tests, the docs test and the script tests together.
 
+### Against a real koldera-core
+
+`tests/live-core.test.ts` runs the SDK against a running koldera-core (synthetic inputs only): a PDF analyze and fix
+with the fixed copy downloaded and its SHA-256 checked, one HTML-to-PDF job and one structured document job. It is
+skipped unless both variables are set, so CI without a server skips it:
+
+```bash
+KOLDERA_URL=http://localhost:8080 KOLDERA_TOKEN=... pnpm test:live
+```
+
+How to start koldera-core locally is in [examples/node-pdf-demo](examples/node-pdf-demo/README.md).
+
 ### React 18
 
 The tests run against React 19. CI also runs them against React 18. To do it locally:

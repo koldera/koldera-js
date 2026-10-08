@@ -1,0 +1,32 @@
+{
+  "title": "Invoice FAKE-2026-0001 (synthetic demo)",
+  "language": "en",
+  "page": { "size": "A4", "orientation": "portrait", "margins": "20mm" },
+  "theme": { "font": "Noto Sans", "fontSize": 11, "accent": "#1f3a5f" },
+  "header": [
+    { "type": "paragraph", "content": [{ "strong": "Example Co. (fictional)" }, " - 1 Sample Street, Exampleville"] }
+  ],
+  "footer": [
+    { "type": "paragraph", "content": ["Questions: ", { "link": { "text": "billing@example.com", "url": "mailto:billing@example.com" } }] },
+    { "type": "pageNumber" }
+  ],
+  "body": [
+    { "type": "heading", "level": 1, "text": "Invoice FAKE-2026-0001" },
+    { "type": "paragraph", "content": ["Synthetic demonstration data. ", { "emphasis": "Every name, number and address here is invented." }] },
+    { "type": "keyValue", "rows": [["Issued", "2026-10-01"], ["Due", "2026-10-31"], ["Customer", "Sample Customer Ltd. (fictional)"]] },
+    { "type": "heading", "level": 2, "text": "Line items" },
+    {
+      "type": "table",
+      "caption": "Items billed on invoice FAKE-2026-0001",
+      "header": [["Description", "Quantity", "Unit price", "Amount"]],
+      "rows": [
+        ["Consulting, hours", "10", "100.00", "1000.00"],
+        ["Hosting, months", "3", "25.00", "75.00"],
+        ["Total", "", "", "1075.00"]
+      ],
+      "columnAlign": ["left", "right", "right", "right"]
+    },
+    { "type": "list", "ordered": false, "items": [["Payment within 30 days."], ["Bank details: none, this invoice is not real."]] },
+    { "type": "link", "text": "Payment terms (example page)", "url": "https://example.com/terms" }
+  ]
+}

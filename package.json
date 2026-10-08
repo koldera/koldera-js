@@ -12,6 +12,7 @@
     "lint": "pnpm -r lint",
     "test:docs": "pnpm -r build && vitest run",
     "test:scripts": "node --test scripts/*.test.mjs",
+    "test:live": "pnpm --filter @koldera/sdk build && vitest run tests/live-core.test.ts",
     "docs:api": "pnpm -r build && typedoc",
     "licences": "node scripts/check-licences.mjs",
     "hygiene": "node scripts/check-source-hygiene.mjs",
