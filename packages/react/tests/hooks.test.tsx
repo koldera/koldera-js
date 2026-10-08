@@ -51,6 +51,18 @@ describe("provider", () => {
     expect(server.exchanges.at(-1)!.received.headers["authorization"]).toBe("Bearer " + SESSION_TOKEN);
   });
 
+  it("treats an unparseable expiresAt as no expiry instead of minting before every call", async () => {
+    const grants = vi.fn<() => Promise<SessionGrant>>().mockResolvedValue({ sessionToken: SESSION_TOKEN, expiresAt: "not a date" });
+    const { result } = renderHook(() => useReadingOrder(JOB_ID), { wrapper: ({ children }) => <Provider getSessionToken={grants}>{children}</Provider> });
+    server.expect("reading-order");
+    await waitFor(() => expect(result.current.snapshot).not.toBeNull());
+    server.expect("reading-order");
+    await act(async () => {
+      await result.current.reload();
+    });
+    expect(grants).toHaveBeenCalledTimes(1);
+  });
+
   it("refreshes the session once after a 401 and retries the call", async () => {
     let calls = 0;
     const grants = async (): Promise<SessionGrant> => {
@@ -93,6 +105,23 @@ describe("usePdfJob", () => {
     const artifacts = await result.current.loadArtifacts();
     expect(artifacts.map((a) => a.kind)).toEqual(["original", "remediated"]);
     expect(server.exchanges.at(-1)!.received.headers["authorization"]).toBe("Bearer " + SESSION_TOKEN);
+  });
+
+  it("uploads through the global fetch, not the provider's fetch prop", async () => {
+    server.expect("upload-ticket-pdf", "upload-put-pdf", "pdf-job-prefer-wait-finished", "findings");
+    const seen: string[] = [];
+    const spy: typeof fetch = (input, init) => { seen.push(String(input)); return globalThis.fetch(input, init); };
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <KolderaProvider baseUrl={server.origin} fetch={spy} getSessionToken={async () => SESSION_TOKEN}>
+        {children}
+      </KolderaProvider>
+    );
+    const { result } = renderHook(() => usePdfJob(), { wrapper });
+    await act(async () => {
+      await result.current.createJob(PDF_BYTES, { mode: "fix", fileName: "sample.pdf", wait: 60 });
+    });
+    expect(seen.some((u) => u.includes("/content"))).toBe(false);
+    expect(seen.some((u) => u.endsWith("/v1/pdf/jobs"))).toBe(true);
   });
 
   it("wait: a job finished within the server's wait is not polled", async () => {

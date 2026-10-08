@@ -16,6 +16,9 @@ Initial release of `@koldera/sdk` and `@koldera/react`, for koldera-core 0.1.
 - `clientSessions.create` on the server client for scoped, short-lived browser sessions.
 - PDF jobs (`analyze`, `fix`), HTML to PDF jobs (`generate_analyze`, `generate_fix`), web scans, structured documents
   with a typed document model and image uploads, reading-order evidence and approved corrections.
+- Signed storage URLs use the global `fetch` (or `storageFetch`), never the `fetch` option, with no credentials; `storageTimeoutMs`
+  (default 600 000) bounds a whole upload or download, a download stops at the expected size, and storage errors never
+  contain the signed URL. Error classes follow the HTTP status and keep the body's `code`.
 - `wait` (sent as `Prefer: wait=N`) and `untilFinished` polling on every creation call; `jobs.wait` treats any state
   other than `queued` or `running` as final.
 - Open enums: unknown states, kinds, modes and problem codes from a newer koldera-core do not crash the client.

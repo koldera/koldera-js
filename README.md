@@ -199,7 +199,7 @@ function InvoiceButton() {
 ```
 
 The provider asks your backend for a session lazily, refreshes it about 30 seconds before it expires and once more
-when the API answers 401. Hooks poll only unfinished jobs and abort on unmount.
+when the API answers 401 (the whole call is repeated once, which includes the upload; see the `@koldera/react` README). Hooks poll only unfinished jobs and abort on unmount.
 
 ## Structured documents
 
@@ -292,8 +292,14 @@ repeated up to twice with the same key, so a lost response does not create a sec
 | `token` | server token; env `KOLDERA_TOKEN` | not accepted |
 | `sessionToken` | not used | string, or function returning the session token |
 | `fetch` | custom `fetch` | custom `fetch` |
-| `timeoutMs` | per-request timeout | per-request timeout |
+| `storageFetch` | `fetch` for signed storage URLs (default: global `fetch`; must not add credentials) | same |
+| `timeoutMs` | per-request timeout (default 30 000) | per-request timeout (default 30 000) |
+| `storageTimeoutMs` | timeout of a whole upload or download, body included (default 600 000) | same |
 | `userAgentSuffix` | appended to the SDK user agent | not sent |
+
+Signed upload and download URLs are always requested with the global `fetch` (or `storageFetch`), never with `fetch`,
+without an `Authorization` header, credentials or redirects, so a `fetch` wrapper that adds credentials never sees them.
+A download is read up to the artifact's expected size only, and storage errors never contain the signed URL.
 
 Per call: `signal` (an `AbortSignal`), `idempotencyKey`, and on job creation `wait`, `untilFinished` and `onResponse`
 (status, `Location`, `Preference-Applied`, `Idempotent-Replayed`).

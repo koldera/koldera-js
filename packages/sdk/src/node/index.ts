@@ -17,7 +17,11 @@ export interface KolderaClientOptions {
   /** Server token (any non-empty string the server accepts). Falls back to `KOLDERA_TOKEN`. Never ship it to a browser. */
   token?: string;
   fetch?: FetchLike;
+  /** Fetch for signed storage URLs; defaults to the global `fetch`. Must not add credentials. */
+  storageFetch?: FetchLike;
   timeoutMs?: number;
+  /** Timeout of a whole upload or download in milliseconds (default 600 000). */
+  storageTimeoutMs?: number;
   userAgentSuffix?: string;
 }
 
@@ -38,7 +42,7 @@ export class KolderaClient extends CoreClient {
     if (!baseUrl) {
       throw new ConfigurationError("baseUrl is required: pass options.baseUrl or set KOLDERA_URL");
     }
-    const transport = new Transport({ baseUrl, bearer: () => token, fetch: options.fetch, timeoutMs: options.timeoutMs, userAgentSuffix: options.userAgentSuffix });
+    const transport = new Transport({ baseUrl, bearer: () => token, fetch: options.fetch, storageFetch: options.storageFetch, timeoutMs: options.timeoutMs, storageTimeoutMs: options.storageTimeoutMs, userAgentSuffix: options.userAgentSuffix });
     super(transport);
     this.clientSessions = new ClientSessions(transport);
   }
