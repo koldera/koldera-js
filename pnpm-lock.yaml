@@ -21,6 +21,32 @@ importers:
         specifier: 5.0.1
         version: 5.0.1(@types/node@22.20.3)(happy-dom@20.14.5)(vite@8.3.2(@types/node@22.20.3)(esbuild@0.28.2)(yaml@2.9.1))
 
+  examples/node-pdf-demo:
+    dependencies:
+      '@koldera/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+    devDependencies:
+      '@types/node':
+        specifier: 22.20.3
+        version: 22.20.3
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  examples/structured-invoice-demo:
+    dependencies:
+      '@koldera/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+    devDependencies:
+      '@types/node':
+        specifier: 22.20.3
+        version: 22.20.3
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
   packages/react:
     dependencies:
       '@koldera/sdk':
