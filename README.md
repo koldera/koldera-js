@@ -311,8 +311,16 @@ Per call: `signal` (an `AbortSignal`), `idempotencyKey`, and on job creation `wa
 | 0.1.x | 0.1.x | 20, 22, 24 | 18, 19 |
 
 The vendored API description in [`contracts/`](contracts) records the koldera-core commit it was taken from
-(`contracts/CORE_VERSION`), and CI checks that the copy matches. Run koldera-core as described in its
+(`contracts/CORE_VERSION`) and the sdk-contract-kit commit it was synced from (`contracts/KIT_VERSION`), and CI checks
+that the copy matches. Run koldera-core as described in its
 README and deployment guide.
+
+## Examples
+
+Runnable demonstrations against a koldera-core you start locally, with synthetic inputs (not published to npm):
+
+- [examples/node-pdf-demo](examples/node-pdf-demo): analyze a PDF, write a fixed copy, download it, list what needs a person.
+- [examples/structured-invoice-demo](examples/structured-invoice-demo): a synthetic invoice as a structured document to a tagged PDF.
 
 ## Links
 
