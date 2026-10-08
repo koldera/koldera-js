@@ -21,6 +21,9 @@ if (job.state === "failed") {
 }
 console.log(`   PDF/UA-1 machine validation: ${job.validation?.status}`);
 for (const rule of job.validation?.failedRules ?? []) console.log(`   failed rule ${rule.ruleId} x${rule.count}`);
+if (job.validation?.status === "declaration_withheld") {
+  console.log("   The PDF/UA identifier (pdfuaid) was not written: declaring PDF/UA requires a human review. This is not a pass.");
+}
 for (const finding of await koldera.jobs.findings(job.id)) {
   console.log(` - ${finding.ruleId}${finding.needsHumanReview ? " (needs human review)" : ""}: ${finding.message}`);
 }
@@ -38,8 +41,8 @@ console.log(`
 == Manual review required: ${job.manualReviewRequired}
 Headings, table headers, the language and descriptions are what the JSON declares; a person still checks that they
 are right. A passing machine check is not an accessibility statement and does not make the invoice fully accessible.
-The Typst renderer itself writes a PDF/UA-1 identifier into generated PDFs; that is a property of the renderer's
-output, not the result of a human review.
+koldera-core removes the PDF/UA-1 identifier the Typst renderer writes, because declaring PDF/UA requires a human
+review; the machine check then reports declaration_withheld, which is not a pass.
 
 == Known limitations (koldera-core with Typst 0.15.1)
  - Row headers ("rowHeaders": true) are tagged as bold data cells (TD), not TH. This demo does not use them.

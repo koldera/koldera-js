@@ -20,7 +20,12 @@ export interface FailedRule {
 
 export interface MachineValidation {
   profile: string;
-  status: Open<"passed" | "failed" | "error" | "not_run">;
+  /**
+   * `declaration_withheld`: the only failing check is the missing PDF/UA identifier (veraPDF `5-1`, still listed in
+   * `failedRules`), which was not written because declaring PDF/UA requires a human review. It is not a pass. Treat a
+   * value you do not know as no verdict.
+   */
+  status: Open<"passed" | "failed" | "error" | "not_run" | "declaration_withheld">;
   failedRules: FailedRule[];
 }
 

@@ -330,6 +330,20 @@ describe("golden: polling and reads", () => {
     expect(artifacts.map((a) => a.kind)).toEqual(["original", "remediated"]);
   });
 
+  it("returns declaration_withheld as its own verdict, never as passed", async () => {
+    for (const name of ["job-completed-fix-declaration-withheld", "job-completed-document-declaration-withheld"]) {
+      server.expect(name);
+      const body = fixtures[name]!.response.body as { id: string };
+      const done = await client.jobs.get(body.id);
+      expect(done.state).toBe("completed");
+      for (const v of [done.validation, done.finalValidation]) {
+        expect(v?.status).toBe("declaration_withheld");
+        expect(v?.failedRules).toEqual([{ ruleId: "ISO 14289-1:2014 5-1", count: 1 }]);
+      }
+      expect(done.manualReviewRequired).toBe(true);
+    }
+  });
+
   it("rejects a malformed job id locally", async () => {
     await expect(client.jobs.get("../organizations")).rejects.toThrow(ConfigurationError);
   });

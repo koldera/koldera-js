@@ -26,11 +26,13 @@ koldera-core's `docs/documents.md` and `contracts/document.schema.json`.
 
 ## What it prints
 
-From a run against koldera-core built from `main` (the job id differs per run):
+With koldera-core `main` (a18df20 or later; the job id and sizes differ per run):
 
 ```text
 == Document job ...: completed
-   PDF/UA-1 machine validation: passed
+   PDF/UA-1 machine validation: declaration_withheld
+   failed rule ISO 14289-1:2014 5-1 x1
+   The PDF/UA identifier (pdfuaid) was not written: declaring PDF/UA requires a human review. This is not a pass.
  - MANUAL_REVIEW_REQUIRED (needs human review): automated validation covers machine-verifiable PDF/UA-1 requirements only; ...
 == Tagged PDF: out/invoice.pdf (31119 bytes, SHA-256 ..., verified)
 == Manual review required: true
@@ -44,6 +46,7 @@ From a run against koldera-core built from `main` (the job id differs per run):
 - A passing machine check covers the machine-verifiable PDF/UA-1 rules only. `manualReviewRequired` is always `true`:
   a person checks that the declared headings, table headers, language and link texts are right. No automated run
   makes a document fully accessible.
-- The Typst renderer writes a PDF/UA-1 identifier into the PDFs it generates. That comes from the renderer's own
-  checks of the declared structure, not from a human review.
+- The Typst renderer writes a PDF/UA-1 identifier into the PDFs it generates; koldera-core removes it, because declaring
+  PDF/UA requires a human review. A PDF whose only failing check is that missing identifier (veraPDF `5-1`) reports
+  `declaration_withheld`. That is not a pass and not a statement that the PDF conforms to PDF/UA.
 - Known limitations: row headers are tagged TD instead of TH, and links in the header and footer render as plain text.
