@@ -1,13 +1,14 @@
 # koldera-js
 
-JavaScript and TypeScript SDK for koldera-core, the commercially licensed, self-hosted service
+JavaScript and TypeScript SDK for koldera-core, the AGPL-3.0-only, self-hosted service
 that checks PDFs against the PDF/UA-1 machine rules, writes fixed copies, renders HTML and structured documents to
 tagged PDF, and scans web pages. Node.js, browsers and React.
 
 Everything koldera-core reports is a **machine check**. A person still has to review the result: `job.manualReviewRequired`
 is always `true`, and this SDK never turns a passing machine check into a statement that a document is accessible.
 
-**Status:** source preview for the 0.1 API. The npm packages and GitHub Release have not been published yet. The API may change before 1.0. A separately licensed Koldera Core deployment is required to run jobs.
+**Status:** source preview for the 0.1 API. The npm packages and GitHub Release have not been published yet. The API may
+change before 1.0. A running [Koldera Core](https://github.com/koldera/koldera-core) deployment is required to run jobs.
 
 ## Use this checkout
 
@@ -343,4 +344,4 @@ Runnable demonstrations against a koldera-core you start locally, with synthetic
 
 This SDK is licensed under the [Apache License 2.0](LICENSE).
 
-koldera-core is commercially licensed, self-hosted software; this SDK is Apache-2.0 and talks to it over its HTTP API.
+koldera-core is AGPL-3.0-only, self-hosted software; this SDK is Apache-2.0 and talks to it over its HTTP API.
