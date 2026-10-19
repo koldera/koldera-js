@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "JavaScript and TypeScript SDK for koldera-core: PDF/UA checks and fixes, HTML and structured documents to tagged PDF, web scans. Node and browsers.",
   "license": "Apache-2.0",
-  "author": "makulatura78",
+  "author": "Roman Lakusta",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/koldera/koldera-js.git",
