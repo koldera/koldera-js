@@ -1,13 +1,27 @@
 # koldera-js
 
-JavaScript and TypeScript SDK for koldera-core, the commercially licensed, self-hosted service
+JavaScript and TypeScript SDK for koldera-core, the AGPL-3.0-only, self-hosted service
 that checks PDFs against the PDF/UA-1 machine rules, writes fixed copies, renders HTML and structured documents to
 tagged PDF, and scans web pages. Node.js, browsers and React.
 
 Everything koldera-core reports is a **machine check**. A person still has to review the result: `job.manualReviewRequired`
 is always `true`, and this SDK never turns a passing machine check into a statement that a document is accessible.
 
-Status: early release (0.1). The API may change before 1.0.
+**Status:** source preview for the 0.1 API. The npm packages and GitHub Release have not been published yet. The API may
+change before 1.0. A running [Koldera Core](https://github.com/koldera/koldera-core) deployment is required to run jobs.
+
+## Use this checkout
+
+To build and test the packages before their first npm release, use Node.js 20 or later and pnpm 10:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm build
+pnpm test
+pnpm lint
+```
+
+The install commands below apply once the packages are published to npm. The examples in [`examples/`](examples) run against a Core instance you provide.
 
 ## Packages
 
@@ -16,7 +30,7 @@ Status: early release (0.1). The API may change before 1.0.
 | [`@koldera/sdk`](packages/sdk) | Typed client. `@koldera/sdk/node` for servers (holds your server token, mints browser sessions), `@koldera/sdk/browser` for pages (a short-lived session token only), `@koldera/sdk` for types and errors. |
 | [`@koldera/react`](packages/react) | `KolderaProvider` and hooks (`usePdfJob`, `useHtmlToPdfJob`, `useDocumentJob`, `useWebScan`, `useReadingOrder`). React 18 or 19. |
 
-The API reference (TypeDoc) is published to GitHub Pages with each release and built in CI on every pull request
+The API reference (TypeDoc) is set to publish to GitHub Pages with each release and is built in CI on every pull request
 (`pnpm docs:api`).
 
 ## Install
@@ -312,8 +326,8 @@ Per call: `signal` (an `AbortSignal`), `idempotencyKey`, and on job creation `wa
 
 The vendored API description in [`contracts/`](contracts) records the koldera-core commit it was taken from
 (`contracts/CORE_VERSION`) and the sdk-contract-kit commit it was synced from (`contracts/KIT_VERSION`), and CI checks
-that the copy matches. Run koldera-core as described in its
-README and deployment guide.
+that the copy matches. Core deployment documentation is supplied to licensed customers; for access, write to
+`licensing@koldera-accessibility.dev`.
 
 ## Examples
 
@@ -330,4 +344,4 @@ Runnable demonstrations against a koldera-core you start locally, with synthetic
 
 This SDK is licensed under the [Apache License 2.0](LICENSE).
 
-koldera-core is commercially licensed, self-hosted software; this SDK is Apache-2.0 and talks to it over its HTTP API.
+koldera-core is AGPL-3.0-only, self-hosted software; this SDK is Apache-2.0 and talks to it over its HTTP API.

@@ -2,8 +2,8 @@
 
 ## Supported versions
 
-koldera-js is an early release. Only the latest 0.x release of `@koldera/sdk` and `@koldera/react` receives security
-fixes. Once 1.0 is out, this page will name the supported lines.
+No version has been released yet. During the source preview, security fixes are made on the latest `main` branch.
+Once releases begin, this page will identify the supported versions.
 
 ## Reporting a vulnerability
 
