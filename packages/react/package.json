@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "React provider and hooks for koldera-core: PDF checks, HTML and structured documents to tagged PDF, web scans and reading-order review with short-lived sessions minted by your backend.",
   "license": "Apache-2.0",
-  "author": "makulatura78",
+  "author": "Roman Lakusta",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/koldera/koldera-js.git",
