@@ -55,9 +55,9 @@
     "lint": "node ../../scripts/write-sdk-version.mjs && tsc -p tsconfig.json --noEmit && tsc -p tests/tsconfig.json"
   },
   "devDependencies": {
-    "@types/node": "22.20.3",
+    "@types/node": "22.20.5",
     "esbuild": "0.28.2",
     "typescript": "5.9.3",
-    "vitest": "5.0.1"
+    "vitest": "5.0.5"
   }
 }
