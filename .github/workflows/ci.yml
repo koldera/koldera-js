@@ -2,13 +2,11 @@ name: CI
 
 # The lean per-change gate: one job on the oldest supported runtime plus a newest-runtime test step.
 # The wide compatibility matrix lives in matrix.yml and runs only for release tags (release.yml).
-# Only files that are never compiled, scanned into a package or checked by a test are ignored; README files are not.
+# Run on every pull request so the required check also completes for documentation changes.
 on:
   pull_request:
-    paths-ignore: ['CHANGELOG.md', 'CONTRIBUTING.md', 'SECURITY.md', 'CODE_OF_CONDUCT.md', '.github/ISSUE_TEMPLATE/**', '.github/pull_request_template.md', '.github/CODEOWNERS']
   push:
     branches: [main]
-    paths-ignore: ['CHANGELOG.md', 'CONTRIBUTING.md', 'SECURITY.md', 'CODE_OF_CONDUCT.md', '.github/ISSUE_TEMPLATE/**', '.github/pull_request_template.md', '.github/CODEOWNERS']
   workflow_call:
 
 permissions:
