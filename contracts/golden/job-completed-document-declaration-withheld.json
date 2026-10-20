@@ -1,0 +1,59 @@
+{
+  "name": "job-completed-document-declaration-withheld",
+  "operationId": "getJob",
+  "auth": "server",
+  "request": {
+    "method": "GET",
+    "path": "/v1/jobs/4d2d5a6e-2b1c-4e4a-9d6b-1f3c5e7a9b04",
+    "headers": {
+      "Authorization": "Bearer {{secretKey}}"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "id": "4d2d5a6e-2b1c-4e4a-9d6b-1f3c5e7a9b04",
+      "kind": "document_to_pdf",
+      "mode": "generate_analyze",
+      "state": "completed",
+      "createdAt": "2026-10-05T10:00:00Z",
+      "startedAt": "2026-10-05T10:00:01Z",
+      "finishedAt": "2026-10-05T10:00:04Z",
+      "validation": {
+        "profile": "pdfua1",
+        "status": "declaration_withheld",
+        "failedRules": [
+          {
+            "ruleId": "ISO 14289-1:2014 5-1",
+            "count": 1
+          }
+        ]
+      },
+      "baselineValidation": {
+        "profile": "pdfua1",
+        "status": "passed",
+        "failedRules": []
+      },
+      "finalValidation": {
+        "profile": "pdfua1",
+        "status": "declaration_withheld",
+        "failedRules": [
+          {
+            "ruleId": "ISO 14289-1:2014 5-1",
+            "count": 1
+          }
+        ]
+      },
+      "remediationStatus": "applied",
+      "manualReviewRequired": true,
+      "engineVersion": "0.1.0",
+      "error": null,
+      "targetUrl": null,
+      "contentSelector": null
+    }
+  },
+  "notes": "A structured document job: the renderer wrote the PDF/UA identifier, core withdrew it (action PDF_UA_IDENTIFIER_WITHDRAWN_V1) and the copy whose only failing check is 5-1 completes with validation.status declaration_withheld. Not a pass; manualReviewRequired stays true."
+}

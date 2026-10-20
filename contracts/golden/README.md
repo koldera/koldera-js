@@ -32,6 +32,9 @@ All values are synthetic: placeholder UUIDs, `example.com` / `.invalid` hosts, f
 * A queued or running job read answers `200` with `Retry-After` (whole seconds); a failed job is still `200`.
 * `503 QUEUE_FULL` carries `Retry-After`. `429 SESSION_JOB_LIMIT` / `SESSION_UPLOAD_LIMIT` carry **no** `Retry-After` in core.
 * `422 VALIDATION_ERROR` for a structured document carries `errors[]` (`path` JSON Pointer, `code`, `message`).
+* `validation.status` `declaration_withheld` (PDF fix and document jobs): the only failing check is the missing PDF/UA
+  identifier (veraPDF `5-1`, still in `failedRules`), withheld because declaring PDF/UA requires a human review. It is
+  not a pass; an SDK must never report it as passed. An unknown status is no verdict.
 * `421 HOST_NOT_ALLOWED` comes from a host filter in front of every route; `openapi.yaml` does not list it per operation.
 
 ## Validation
@@ -94,6 +97,8 @@ Content-Length of raw bodies. `pnpm test` runs the validator's own tests.
 
 ### getJob
 
+- `job-completed-document-declaration-withheld`: GET /v1/jobs/{id} -> 200
+- `job-completed-fix-declaration-withheld`: GET /v1/jobs/{id} -> 200
 - `job-completed-fix`: GET /v1/jobs/{id} -> 200
 - `job-completed-session`: GET /v1/jobs/{id} -> 200
 - `job-completed`: GET /v1/jobs/{id} -> 200
